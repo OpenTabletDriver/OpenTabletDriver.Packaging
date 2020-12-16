@@ -1,0 +1,77 @@
+#!/bin/bash
+source ../base
+
+# Build arguments
+framework="net5"
+runtime="osx-x64"
+projects=("OpenTabletDriver.Daemon" "OpenTabletDriver.UX.MacOS")
+
+# Work directories
+activeRoot="$root/MacOS"
+packageRoot="$activeRoot/OpenTabletDriver.app"
+
+# Build directory
+buildDir="$packageRoot/Contents/MacOS"
+
+# Platform requirements
+icons="$packageRoot/Contents/Resources/Icon.icns"
+
+# Output
+archive="$activeRoot/OpenTabletDriver.$runtime.tar.gz"
+
+clean() {
+    if [ -f "$archive" ]; then
+        echo -e "${accent}Cleaning up existing builds...${default}"
+        rm -vf "$archive"
+    fi
+
+    if [ -d "$buildDir" ]; then
+        echo -e "${accent}Cleaning up build directory...${default}"
+        rm -vrf "$buildDir"
+    fi
+}
+
+prepare() {
+    clone_repo ${otdRepo[@]}
+}
+
+build() {
+    echo -e "${accent}Building OpenTabletDriver...${default}"
+    for proj in ${projects[@]}; do
+      dotnet publish "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --framework $framework -o $buildDir --self-contained false
+    done
+
+    echo -e "${accent}Copying all tablet configuration files to '$buildDir/Configurations'${default}"
+    cp -vr "$configurations" "$buildDir"
+
+    echo -e "${accent}Removing all debug files... (.pdb)${default}"
+    find "$buildDir" -name "*.pdb" -type f -exec rm {} ';'
+
+    echo -e "${accent}Copying MacOS assets...${default}"
+    cp -v "$repoRoot/OpenTabletDriver.UX.MacOS/Icon.icons" "$icns"
+
+    if [ -f "$archive" ]; then
+      rm "$archive"
+    fi
+    echo -e "${accent}Creating '$archive'${default}"
+    tar -zcvf "$archive" "OpenTabletDriver.app"
+
+    echo -e "${accent}Packaging complete.${default}"
+}
+
+case $1 in
+    "clean")
+        clean
+    ;;
+    "prepare")
+        prepare
+    ;;
+    "build")
+        build
+    ;;
+    *)
+        clean
+        prepare
+        build
+    ;;
+esac

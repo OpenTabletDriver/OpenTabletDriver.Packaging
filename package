@@ -1,0 +1,38 @@
+#!/bin/bash
+source base
+
+clean() {
+    echo -e "${accent}Cleaning up packages...${default}"
+    for script in */package ; do
+        exec $script clean
+    done
+}
+
+prepare() {
+    echo -e "${accent}Setting up build environment...${default}"
+    for script in */package ; do
+        exec $script prepare
+    done
+}
+
+build() {
+    echo -e "${accent}Packaging for all currently possible platforms..."
+    for script in */package; do
+        exec $script
+    done
+}
+
+case $1 in
+    "clean")
+        clean
+    ;;
+    "prepare")
+        prepare
+    ;;
+    "build")
+        build
+    ;;
+    *)
+        echo -e "${accent}Invalid command.${default}"
+    ;;
+esac

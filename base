@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Output stylization
+default="\e[39m"
+accent="\e[96m"
+
+# Working directories
+root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+src="$root/src"
+
+# Repositories
+otdRepo=("https://github.com/InfinityGhost/OpenTabletDriver" $(readlink -f "$src/OpenTabletDriver"))
+repoRoot="${otdRepo[1]}"
+
+# Common variables
+configurations=$(readlink -f "$repoRoot/OpenTabletDriver/Configurations")
+
+get_group() {
+    if [[ "$1" =~ $2 ]]; then
+        echo ${BASH_REMATCH[$3]}
+    fi
+}
+
+clone_repo() {
+    args=("$@")
+    if [ ! "${#args[@]}" -eq "2" ]; then
+        echo -e "${accent}Invalid clone arguments.${default}"
+        return
+    fi;
+
+    url="${args[0]}"
+    dir="${args[1]}"
+    if [ ! -e "$dir" ]; then
+        git clone "$url" "$dir"
+    fi
+}
