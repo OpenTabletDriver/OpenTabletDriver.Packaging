@@ -1,8 +1,8 @@
 #!/bin/bash
-if [ -f ../base ]; then
-    source ../base
-elif [ -f base ]; then
+if [ -f base ]; then
     source base
+elif [ -f ../base ]; then
+    source ../base
 fi
 
 # Build arguments
@@ -88,21 +88,15 @@ build() {
     sed -i "s/Version=.\+$/Version=${version}/g" "$desktop"
 
     echo -e "${accent}Packaging 'OpenTabletDriver.deb'...${default}"
-    dpkg-deb --build "./OpenTabletDriver" "$deb"
+    dpkg-deb --build "$activeRoot/OpenTabletDriver" "$deb"
 
     echo -e "${accent}Packaging complete.${default}"
 }
 
 case $1 in
-    "clean")
-        clean
-    ;;
-    "prepare")
-        prepare
-    ;;
-    "build")
-        build
-    ;;
+    "clean") clean ;;
+    "prepare") prepare ;;
+    "build") build ;;
     *)
         clean
         prepare

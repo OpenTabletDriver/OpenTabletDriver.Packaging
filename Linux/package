@@ -1,5 +1,9 @@
 #!/bin/bash
-source ../base
+if [ -f base ]; then
+    source base
+elif [ -f ../base ]; then
+    source ../base
+fi
 
 # Build arguments
 framework="net5"
@@ -73,15 +77,9 @@ build() {
 }
 
 case $1 in
-    "clean")
-        clean
-    ;;
-    "prepare")
-        prepare
-    ;;
-    "build")
-        build
-    ;;
+    "clean") clean ;;
+    "prepare") prepare ;;
+    "build") build ;;
     *)
         clean
         prepare
