@@ -55,7 +55,7 @@ prepare() {
 build() {
     echo -e "${accent}Building OpenTabletDriver...${default}"
     for proj in ${projects[@]}; do
-        dotnet build "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --framework $framework -o $buildDir
+        dotnet publish "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --self-contained false --framework $framework -o $buildDir
     done
 
     echo -e "${accent}Building udev rules...${default}"
