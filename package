@@ -1,0 +1,30 @@
+#!/bin/bash
+
+clean() {
+    for file in */package; do
+        eval $file clean
+    done
+}
+
+prepare() {
+    for file in */package; do
+        eval $file prepare
+    done
+}
+
+build() {
+    for file in */package; do
+        eval $file build
+    done
+}
+
+case $1 in
+    "clean") clean ;;
+    "prepare") prepare ;;
+    "build") build ;;
+    *)
+        clean
+        prepare
+        build
+    ;;
+esac

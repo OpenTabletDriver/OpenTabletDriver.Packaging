@@ -58,7 +58,7 @@ build() {
       rm "$archive"
     fi
     echo -e "${accent}Creating '$archive'${default}"
-    tar -zcvf "$archive" "OpenTabletDriver.app"
+    tar -zcvf "$archive" "$activeRoot/OpenTabletDriver.app"
 
     echo -e "${accent}Packaging complete.${default}"
 }

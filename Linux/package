@@ -71,7 +71,7 @@ build() {
     find "$buildDir" -name "*.pdb" -type f -exec rm {} ';'
 
     echo -e "${accent}Creating '$archive'${default}"
-    tar -zcvf "$archive" "OpenTabletDriver"
+    tar -zcvf "$archive" "$activeRoot/OpenTabletDriver"
 
     echo -e "${accent}Packaging complete.${default}"
 }

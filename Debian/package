@@ -41,7 +41,7 @@ clean() {
     fi
 
     echo -e "${accent}Cleaning 'DEBIAN/control'...${default}"
-    sed -i "s/^Installed-Size: .\+$/Installed-Size: 0/g" "$DEBIAN/control"
+    sed -i "s/^Installed-Size:.\+$/Installed-Size: 0/g" "$DEBIAN/control"
     sed -i "s/^Version: .\+$/Version: 0.0.0/g" "$DEBIAN/control"
 
     echo -e "${accent}Cleaning desktop file...${default}"
@@ -77,12 +77,12 @@ build() {
     find "$buildDir" -name "*.pdb" -type f -exec rm {} ';'
 
     echo -e "${accent}Updating size in DEBIAN/control${default}"
-    sed -i "s/Installed-Size: .\+$/Installed-Size: $(du -s OpenTabletDriver | cut -f1)/g" "$DEBIAN/control"
+    sed -i "s/Installed-Size:.\+$/Installed-Size: $(du -s "$activeRoot/OpenTabletDriver" | cut -f1)/g" "$DEBIAN/control"
 
     version=$(get_group "$(cat $repoRoot/OpenTabletDriver/OpenTabletDriver.csproj)" '<VersionPrefix>(.+?)<\/VersionPrefix>' 1)
 
     echo -e "${accent}Updating version in DEBIAN/control${default}"
-    sed -i "s/Version: .\+$/Version: ${version}/g" "$DEBIAN/control"
+    sed -i "s/Version:.\+$/Version: ${version}/g" "$DEBIAN/control"
 
     echo -e "${accent}Updating version in desktop file${default}"
     sed -i "s/Version=.\+$/Version=${version}/g" "$desktop"
