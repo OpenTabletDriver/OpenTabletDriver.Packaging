@@ -42,7 +42,7 @@ prepare() {
 build() {
     echo -e "${accent}Building OpenTabletDriver...${default}"
     for proj in ${projects[@]}; do
-      dotnet publish "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --framework $framework -o $buildDir --self-contained false
+      dotnet publish "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --framework $framework -o $buildDir --self-contained false /p:PublishTrimmed=false
     done
 
     echo -e "${accent}Copying all tablet configuration files to '$buildDir/Configurations'${default}"
