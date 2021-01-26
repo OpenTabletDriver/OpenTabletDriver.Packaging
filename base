@@ -20,7 +20,7 @@ safe_link() {
     src_dir="$1"
     submodule_dir="$2"
     submodule_dir_parent="$(dirname $submodule_dir)"
-    if [ -d "$submodule_dir" ]; then
+    if [ ! -d "$submodule_dir" ]; then
         if [ ! -d "$submodule_dir_parent" ]; then
             mkdir -p "$submodule_dir_parent"
         fi

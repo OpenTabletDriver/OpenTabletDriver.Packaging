@@ -50,6 +50,7 @@ clean() {
 prepare() {
     clone_repo ${otdRepo[@]}
     clone_repo ${udevRepo[@]}
+    safe_link "${otdRepo[1]}" "${udevRepo[1]}/.modules/OpenTabletDriver"
 }
 
 build() {
