@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Output stylization
 default="\e[39m"
@@ -8,12 +8,25 @@ accent="\e[96m"
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 src="$root/src"
 
-# Repositories
-otdRepo=("https://github.com/InfinityGhost/OpenTabletDriver" $(readlink -f "$src/OpenTabletDriver"))
-repoRoot="${otdRepo[1]}"
+dir_check() {
+    if [ -d "$1" ]; then
+        echo "$(readlink -f $1)"
+    else
+        echo "$1"
+    fi
+}
 
-# Common variables
-configurations=$(readlink -f "$repoRoot/OpenTabletDriver/Configurations")
+safe_link() {
+    src_dir="$1"
+    submodule_dir="$2"
+    submodule_dir_parent="$(dirname $submodule_dir)"
+    if [ -d "$submodule_dir" ]; then
+        if [ ! -d "$submodule_dir_parent" ]; then
+            mkdir -p "$submodule_dir_parent"
+        fi
+        ln -s "$src_dir" "$submodule_dir"
+    fi
+}
 
 get_group() {
     if [[ "$1" =~ $2 ]]; then
@@ -23,14 +36,21 @@ get_group() {
 
 clone_repo() {
     args=("$@")
-    if [ ! "${#args[@]}" -eq "2" ]; then
+    if [ "${#args[@]}" -eq "2" ]; then
+        url="${args[0]}"
+        dir="${args[1]}"
+        if [ ! -e "$dir" ]; then
+            git clone "$url" "$dir"
+        fi
+    else
         echo -e "${accent}Invalid clone arguments.${default}"
-        return
+        exit 1
     fi;
-
-    url="${args[0]}"
-    dir="${args[1]}"
-    if [ ! -e "$dir" ]; then
-        git clone "$url" "$dir"
-    fi
 }
+
+# Repositories
+otdRepo=("https://github.com/InfinityGhost/OpenTabletDriver" $(dir_check "$src/OpenTabletDriver"))
+repoRoot="${otdRepo[1]}"
+
+# Common variables
+configurations=$(readlink -f "$repoRoot/OpenTabletDriver/Configurations")

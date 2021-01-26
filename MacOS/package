@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 if [ -f base ]; then
     source base
 elif [ -f ../base ]; then

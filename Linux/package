@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 if [ -f base ]; then
     source base
 elif [ -f ../base ]; then
@@ -11,7 +11,7 @@ runtime="linux-x64"
 projects=("OpenTabletDriver.Daemon" "OpenTabletDriver.Console" "OpenTabletDriver.UX.Gtk")
 
 # Other repositories
-udevRepo=("https://github.com/InfinityGhost/OpenTabletDriver-udev" $(readlink -f "$src/OpenTabletDriver-udev"))
+udevRepo=("https://github.com/InfinityGhost/OpenTabletDriver-udev" $(dir_check "$src/OpenTabletDriver-udev"))
 
 # Work directories
 activeRoot="$root/Linux"
