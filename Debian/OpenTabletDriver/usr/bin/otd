@@ -7,4 +7,4 @@ then
   systemctl --user start opentabletdriver
 fi
 
-/usr/share/OpenTabletDriver/OpenTabletDriver/OpenTabletDriver.Console "$@"
+/usr/share/OpenTabletDriver/OpenTabletDriver.Console "$@"

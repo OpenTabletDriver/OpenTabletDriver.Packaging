@@ -66,12 +66,13 @@ build() {
     done
 
     echo -e "${accent}Building udev rules...${default}"
-    dotnet run -f net5 -p "${udevRepo[1]}/OpenTabletDriver.udev/OpenTabletDriver.udev.csproj" -- -v "$configurations" "$udevrules"
+    dotnet run -f net5 -p "${udevRepo[1]}/OpenTabletDriver.udev/OpenTabletDriver.udev.csproj" -v minimal -- -v "$configurations" "$udevrules"
 
     echo -e "${accent}Copying all tablet configuration files to '$buildDir/Configurations'${default}"
     cp -vr "$configurations" "$buildDir"
 
     echo -e "${accent}Copying assets to '$pixmaps'${default}"
+    mkdir -p "$pixmaps"
     find "$repoRoot/OpenTabletDriver.UX/Assets" -type f -exec cp {} "$pixmaps" ';'
 
     echo -e "${accent}Removing all debug files... (.pdb)${default}"
