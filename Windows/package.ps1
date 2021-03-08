@@ -74,7 +74,7 @@ function build() {
     Get-ChildItem $buildDir | Where-Object {$_.Name -Match '\.pdb$'} | Remove-Item -Verbose
 
     Write-Host "Compressing archive..." -ForegroundColor $accent
-    Compress-Archive $buildDir -CompressionLevel Fastest -DestinationPath $archive
+    Compress-Archive $buildDir/* -CompressionLevel Fastest -DestinationPath $archive
 
     Write-Host "Packaging complete." -ForegroundColor $accent
 }
