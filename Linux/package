@@ -1,93 +1,64 @@
 #!/usr/bin/env bash
-if [ -f base ]; then
-    source base
-elif [ -f ../base ]; then
-    source ../base
-fi
+SCRIPT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
+[ ! -d "${SCRIPT_DIR}" ] && exit 100;
+
+source "${SCRIPT_DIR}/../base"
 
 # Build arguments
-framework="net5"
-runtime="linux-x64"
-projects=("OpenTabletDriver.Daemon" "OpenTabletDriver.Console" "OpenTabletDriver.UX.Gtk")
+FRAMEWORK="net5"
+RUNTIME="linux-x64"
+PROJECTS=("OpenTabletDriver.Daemon" "OpenTabletDriver.Console" "OpenTabletDriver.UX.Gtk")
 
-# Other repositories
-udevRepo=("https://github.com/InfinityGhost/OpenTabletDriver-udev" $(dir_check "$src/OpenTabletDriver-udev"))
+# Directories
+OUT_DIR="${SCRIPT_DIR}/OpenTabletDriver"
+OUT_DIR_CONFIGURATIONS="${OUT_DIR}/Configurations"
 
-# Work directories
-activeRoot="$root/Linux"
-packageRoot="$activeRoot/OpenTabletDriver"
+# Package
+PKG_TARBALL_FILE="${SCRIPT_DIR}/OpenTabletDriver.${RUNTIME}.tar.gz"
 
-# Build directory
-buildDir="$packageRoot"
-
-# Platform requirements
-udevrules="$packageRoot/99-opentabletdriver.rules"
-pixmaps="$packageRoot/usr/share/pixmaps/"
-
-# Output
-archive="$activeRoot/OpenTabletDriver.$runtime.tar.gz"
+# Files
+OUT_UDEV_FILE="${OUT_DIR}/99-opentabletdriver.rules"
 
 clean() {
-    if [ -f "$archive" ]; then
-        echo -e "${accent}Cleaning up existing builds...${default}"
-        rm -vf "$archive"
-    fi
-
-    if [ -d "$buildDir" ]; then
-        echo -e "${accent}Cleaning up build directory...${default}"
-        rm -vrf "$buildDir"
-    fi
-
-    if [ -e "$udevrules" ]; then
-        echo -e "${accent}Cleaning existing udev rules...${default}"
-        rm -v $udevrules
-    fi
-
-    echo -e "${accent}Cleaning up existing assets...${default}"
-    rm -vrf "$pixmaps"
-}
-
-prepare() {
-    clone_repo ${otdRepo[@]}
-    clone_repo ${udevRepo[@]}
-    safe_link "${otdRepo[1]}" "${udevRepo[1]}/.modules/OpenTabletDriver"
+  clean_target "${PKG_TARBALL_FILE}" "Cleaning up existing builds..."
+  clean_target "${OUT_DIR}" "Cleaning up build directory..."
+  clean_target "${OUT_UDEV_FILE}" "Cleaning existing udev rules..."
 }
 
 build() {
-    echo -e "${accent}Building OpenTabletDriver...${default}"
-    for proj in ${projects[@]}; do
-        dotnet publish "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --self-contained false --framework $framework -o $buildDir
-    done
+	print "Building OpenTabletDriver..."
+	for project in ${PROJECTS[@]}; do
+		dotnet publish "${SRC_DIR}/${project}"\
+			--runtime ${RUNTIME} \
+      --configuration Release \
+      --self-contained false \
+      --framework ${FRAMEWORK} \
+      --output ${OUT_DIR}
+	done
+}
 
-    echo -e "${accent}Building udev rules...${default}"
-    dotnet run -f $framework -p "${udevRepo[1]}/OpenTabletDriver.udev/OpenTabletDriver.udev.csproj" -- -v "$configurations" "$udevrules"
+package() {
+  generate_rules "${SRC_DIR_CONFIGURATIONS}" "${OUT_UDEV_FILE}"
 
-    echo -e "${accent}Copying all tablet configuration files to '$buildDir/Configurations'${default}"
-    cp -vr "$configurations" "$buildDir"
+	print "Copying all tablet configuration files to '${OUT_DIR_CONFIGURATIONS}'"
+	cp -vr "${SRC_DIR_CONFIGURATIONS}" "${OUT_DIR_CONFIGURATIONS}"
 
-    echo -e "${accent}Copying assets to '$buildDir/Assets'${default}"
-    cp -vr "$repoRoot/OpenTabletDriver.UX/Assets" "$pixmaps"
+	clean_debug "${OUT_DIR}"
 
-    echo -e "${accent}Removing all debug files... (.pdb)${default}"
-    find "$buildDir" -name "*.pdb" -type f -exec rm {} ';'
+  create_tarball "${OUT_DIR}" "${PKG_TARBALL_FILE}"
 
-    echo -e "${accent}Creating '$archive'${default}"
-    
-    prev=$(pwd)
-    cd $activeRoot
-    tar -zcvf "$archive" "OpenTabletDriver"
-    cd $prev
-
-    echo -e "${accent}Packaging complete.${default}"
+	print "Packaging complete."
 }
 
 case $1 in
-    "clean") clean ;;
-    "prepare") prepare ;;
-    "build") build ;;
-    *)
-        clean
-        prepare
-        build
-    ;;
+	"clean") clean ;;
+	"prepare") prepare ;;
+	"build") build ;;
+  "package") package ;;
+	*)
+		clean
+		prepare
+		build
+    package
+	;;
 esac

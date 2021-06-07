@@ -1,79 +1,63 @@
 #!/usr/bin/env bash
-if [ -f base ]; then
-    source base
-elif [ -f ../base ]; then
-    source ../base
-fi
+SCRIPT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
+[ ! -d "${SCRIPT_DIR}" ] && exit 100;
+
+source "${SCRIPT_DIR}/../base"
 
 # Build arguments
-framework="net5"
-runtime="osx-x64"
-projects=("OpenTabletDriver.Daemon" "OpenTabletDriver.UX.MacOS")
+FRAMEWORK="net5"
+RUNTIME="osx-x64"
+PROJECTS=("OpenTabletDriver.Daemon" "OpenTabletDriver.UX.MacOS")
 
-# Work directories
-activeRoot="$root/MacOS"
-packageRoot="$activeRoot/OpenTabletDriver.app"
+# Directories
+PKG_DIR="${SCRIPT_DIR}/OpenTabletDriver.app"
+OUT_DIR="${PKG_DIR}/Contents/MacOS"
+OUT_DIR_CONFIGURATIONS="${OUT_DIR}/Configurations"
 
-# Build directory
-buildDir="$packageRoot/Contents/MacOS"
-
-# Platform requirements
-icons="$packageRoot/Contents/Resources/Icon.icns"
-
-# Output
-archive="$activeRoot/OpenTabletDriver.$runtime.tar.gz"
+# Package
+PKG_ICONS_FILE="${PKG_DIR}/Contents/Resources/Icon.icns"
+PKG_TARBALL_FILE="${SCRIPT_DIR}/OpenTabletDriver.${RUNTIME}.tar.gz"
 
 clean() {
-    if [ -f "$archive" ]; then
-        echo -e "${accent}Cleaning up existing builds...${default}"
-        rm -vf "$archive"
-    fi
-
-    if [ -d "$buildDir" ]; then
-        echo -e "${accent}Cleaning up build directory...${default}"
-        rm -vrf "$buildDir"
-    fi
-}
-
-prepare() {
-    clone_repo ${otdRepo[@]}
+  clean_target "${PKG_TARBALL_FILE}" "Cleaning up existing builds..."
+  clean_target "${OUT_DIR}" "Cleaning up build directory..."
 }
 
 build() {
-    echo -e "${accent}Building OpenTabletDriver...${default}"
-    for proj in ${projects[@]}; do
-      dotnet publish "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --framework $framework -o $buildDir --self-contained false /p:PublishTrimmed=false
-    done
+	print "Building OpenTabletDriver..."
+	for project in ${PROJECTS[@]}; do
+		dotnet publish "${SRC_DIR}/${project}"\
+			--runtime ${RUNTIME} \
+      --configuration Release \
+      --self-contained false \
+      --framework ${FRAMEWORK} \
+      --output ${OUT_DIR}
+	done
+}
 
-    echo -e "${accent}Copying all tablet configuration files to '$buildDir/Configurations'${default}"
-    cp -vr "$configurations" "$buildDir"
+package() {
+  print "Copying all tablet configuration files to '${OUT_DIR_CONFIGURATIONS}'"
+  cp -vr "${SRC_DIR_CONFIGURATIONS}" "${OUT_DIR_CONFIGURATIONS}"
 
-    echo -e "${accent}Removing all debug files... (.pdb)${default}"
-    find "$buildDir" -name "*.pdb" -type f -exec rm {} ';'
+  clean_debug "${OUT_DIR}"
 
-    echo -e "${accent}Copying MacOS assets...${default}"
-    cp -v "$repoRoot/OpenTabletDriver.UX.MacOS/Icon.icons" "$icns"
+  print "Copying MacOS assets..."
+  cp -v "${SRC_DIR}/OpenTabletDriver.UX.MacOS/Icon.icons" "${PKG_ICONS_FILE}"
 
-    if [ -f "$archive" ]; then
-      rm "$archive"
-    fi
-    echo -e "${accent}Creating '$archive'${default}"
-    
-    prev=$(pwd)
-    cd $activeRoot
-    tar -zcvf "$archive" "OpenTabletDriver.app"
-    cd $prev
+  create_tarball "${PKG_DIR}" "${PKG_TARBALL_FILE}"
 
-    echo -e "${accent}Packaging complete.${default}"
+  print "Packaging complete."
 }
 
 case $1 in
-    "clean") clean ;;
-    "prepare") prepare ;;
-    "build") build ;;
-    *)
-        clean
-        prepare
-        build
-    ;;
+  "clean") clean ;;
+  "prepare") prepare ;;
+  "build") build ;;
+  "package") package ;;
+  *)
+    clean
+    prepare
+    build
+    package
+  ;;
 esac
