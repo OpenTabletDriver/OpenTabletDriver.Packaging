@@ -1,56 +1,85 @@
 #!/usr/bin/env bash
 
 # Output stylization
-default="\e[39m"
-accent="\e[96m"
+RESET="\e[39m"
+ACCENT="\e[96m"
 
 # Working directories
-root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-src="$root/src"
+ROOT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 
-dir_check() {
-    if [ -d "$1" ]; then
-        echo "$(readlink -f $1)"
-    else
-        echo "$1"
-    fi
-}
+# Repositories
+REPO=("https://github.com/InfinityGhost/OpenTabletDriver" "$(readlink -f "${ROOT_DIR}/src/OpenTabletDriver")")
+SRC_DIR="${REPO[1]}"
+SRC_DIR_CONFIGURATIONS="${SRC_DIR}/OpenTabletDriver/Configurations"
 
-safe_link() {
-    src_dir="$1"
-    submodule_dir="$2"
-    submodule_dir_parent="$(dirname $submodule_dir)"
-    if [ ! -d "$submodule_dir" ]; then
-        if [ ! -d "$submodule_dir_parent" ]; then
-            mkdir -p "$submodule_dir_parent"
-        fi
-        ln -s "$src_dir" "$submodule_dir"
-    fi
+print() {
+  printf "${ACCENT}$@${RESET}\n"
 }
 
 get_group() {
-    if [[ "$1" =~ $2 ]]; then
-        echo ${BASH_REMATCH[$3]}
-    fi
+  if [[ "$1" =~ $2 ]]; then
+    echo ${BASH_REMATCH[$3]}
+  fi
 }
 
 clone_repo() {
-    args=("$@")
-    if [ "${#args[@]}" -eq "2" ]; then
-        url="${args[0]}"
-        dir="${args[1]}"
-        if [ ! -e "$dir" ]; then
-            git clone "$url" "$dir"
-        fi
-    else
-        echo -e "${accent}Invalid clone arguments.${default}"
-        exit 1
-    fi;
+  args=("$@")
+  if [ "${#args[@]}" -eq "2" ]; then
+    url="${args[0]}"
+    dir="${args[1]}"
+    if [ ! -e "$dir" ]; then
+        git clone "$url" "$dir"
+    fi
+  else
+    printf "${ACCENT_COLOR}Invalid clone arguments. ($@)${DEFAULT_COLOR}\n"
+    exit 1
+  fi;
 }
 
-# Repositories
-otdRepo=("https://github.com/InfinityGhost/OpenTabletDriver" $(dir_check "$src/OpenTabletDriver"))
-repoRoot="${otdRepo[1]}"
+prepare() {
+	clone_repo ${REPO[@]}
+}
 
-# Common variables
-configurations=$(readlink -f "$repoRoot/OpenTabletDriver/Configurations")
+regex_edit() {
+  [ "$#" -ne 3 ] && exit 200
+  [ ! -f "${3}" ] && exit 201
+
+  sed -i "s/${1}/${2}/g" "${3}"
+}
+
+create_tarball() {
+  [ "$#" -ne 2 ] && exit 210
+
+  print "Creating '${2}' from '${1}'"
+  cd $(dirname "${2}")
+  tar -zcvf "${2}" "$(basename ${1})"
+}
+
+generate_rules() {
+  [ "$#" -ne 2 ] && exit 220
+  [ ! -d "${1}" ] && exit 221
+
+  print "Generating udev rules..."
+	"${SRC_DIR}/generate-rules.sh" -v "${1}" "${2}"
+}
+
+clean_target() {
+  [ "$#" -ne 2 ] && exit 230
+  
+  if [ -e "${1}" ]; then
+    print "${2}"
+    if [ -f "${1}" ]; then 
+      rm -vf "${1}"
+    elif [ -d "${1}" ]; then
+      rm -vrf "${1}"
+    fi
+  fi
+}
+
+clean_debug() {
+  [ "$#" -ne 1 ] && exit 250
+  [ ! -d "${1}" ] && exit 251
+
+  print "Removing all debug files... (.pdb)"
+  find "${1}" -name "*.pdb" -type f -exec rm {} ';'
+}

@@ -1,107 +1,127 @@
 #!/usr/bin/env bash
-if [ -f base ]; then
-    source base
-elif [ -f ../base ]; then
-    source ../base
-fi
+SCRIPT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
+[ ! -d "${SCRIPT_DIR}" ] && exit 100;
+
+source "${SCRIPT_DIR}/../base"
 
 # Build arguments
-framework="net5"
-runtime="linux-x64"
-projects=("OpenTabletDriver.Daemon" "OpenTabletDriver.Console" "OpenTabletDriver.UX.Gtk")
+FRAMEWORK="net5"
+RUNTIME="linux-x64"
+PROJECTS=("OpenTabletDriver.Daemon" "OpenTabletDriver.Console" "OpenTabletDriver.UX.Gtk")
 
-# Other repositories
-udevRepo=("https://github.com/InfinityGhost/OpenTabletDriver-udev" $(dir_check "$src/OpenTabletDriver-udev"))
+# Directories
+PKG_DIR="${SCRIPT_DIR}/OpenTabletDriver"
+OUT_DIR="${PKG_DIR}/usr/share/OpenTabletDriver"
+OUT_DIR_CONFIGURATIONS="${OUT_DIR}/Configurations"
+OUT_DIR_PIXMAPS="${PKG_DIR}/usr/share/pixmaps"
 
-# Work directories
-activeRoot="$root/Debian"
-packageRoot="$activeRoot/OpenTabletDriver"
+# Package
+PKG_DEB_FILE="${SCRIPT_DIR}/OpenTabletDriver.deb"
+DEBIAN_DIR="${PKG_DIR}/DEBIAN"
 
-# Build directory
-buildDir="$packageRoot/usr/share/OpenTabletDriver"
-DEBIAN="$packageRoot/DEBIAN"
-
-# Platform requirements
-udevrules="$packageRoot/usr/lib/udev/rules.d/99-opentabletdriver.rules"
-desktop="$packageRoot/usr/share/applications/OpenTabletDriver.desktop"
-pixmaps="$packageRoot/usr/share/pixmaps/"
+# Files
+PKG_DESKTOP_FILE="${PKG_DIR}/usr/share/applications/OpenTabletDriver.desktop"
+OUT_UDEV_FILE="${PKG_DIR}/usr/lib/udev/rules.d/99-opentabletdriver.rules"
 
 # Output
-deb="$activeRoot/OpenTabletDriver.deb"
 
 clean() {
-    if [ -f "$deb" ]; then 
-        echo -e "${accent}Cleaning up existing builds...${default}"
-        rm "$deb"
-    fi
+  if [ -f "${PKG_DEB_FILE}" ]; then
+    print "Cleaning up existing builds..."
+    rm "$PKG_DEB_FILE"
+  fi
 
-    if [ -d "$buildDir" ]; then
-        echo -e "${accent}Cleaning up build directory...${default}"
-        rm -vrf "$buildDir"
-    fi
+  if [ -d "${OUT_DIR}" ]; then
+    print "Cleaning up build directory..."
+    rm -vrf "${OUT_DIR}"
+  fi
 
-    echo -e "${accent}Cleaning 'DEBIAN/control'...${default}"
-    sed -i "s/^Installed-Size:.\+$/Installed-Size: 0/g" "$DEBIAN/control"
-    sed -i "s/^Version: .\+$/Version: 0.0.0/g" "$DEBIAN/control"
+  print "Cleaning 'DEBIAN/control'..."
+  regex_edit "^Installed-Size:.\+$" "Installed-Size: 0" "${DEBIAN_DIR}/control"
+  regex_edit "^Version: .\+$" "Version: 0.0.0" "${DEBIAN_DIR}/control"
 
-    echo -e "${accent}Cleaning desktop file...${default}"
-    sed -i "s/^Version=.\+$/Version=0.0.0/g" "$desktop"
+  print "Cleaning desktop file..."
+  regex_edit "^Version=.\+$" "Version=0.0.0" "${PKG_DESKTOP_FILE}"
 
-    if [ -e "$udevrules" ]; then
-        echo -e "${accent}Cleaning existing udev rules...${default}"
-        rm -v $udevrules
-    fi
-}
-
-prepare() {
-    clone_repo ${otdRepo[@]}
-    clone_repo ${udevRepo[@]}
-    safe_link "${otdRepo[1]}" "${udevRepo[1]}/.modules/OpenTabletDriver"
+  if [ -e "$UDEV_RULES" ]; then
+    printf -e "${ACCENT}Cleaning existing udev rules...${RESET}"
+    rm -v $UDEV_RULES
+  fi
 }
 
 build() {
-    echo -e "${accent}Building OpenTabletDriver...${default}"
-    for proj in ${projects[@]}; do
-        dotnet publish "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --self-contained false --framework $framework -o $buildDir
-    done
+	print "Building OpenTabletDriver..."
+	for project in ${PROJECTS[@]}; do
+		dotnet publish "${SRC_DIR}/${project}"\
+			--runtime ${RUNTIME} \
+      --configuration Release \
+      --self-contained false \
+      --framework ${FRAMEWORK} \
+      --output ${OUT_DIR}
+	done
+}
 
-    echo -e "${accent}Building udev rules...${default}"
-    dotnet run -f net5 -p "${udevRepo[1]}/OpenTabletDriver.udev/OpenTabletDriver.udev.csproj" -v minimal -- -v "$configurations" "$udevrules"
+package() {
+  generate_rules "${SRC_DIR_CONFIGURATIONS}" "${OUT_UDEV_FILE}"
 
-    echo -e "${accent}Copying all tablet configuration files to '$buildDir/Configurations'${default}"
-    cp -vr "$configurations" "$buildDir"
+  print "Copying all tablet configuration files to '${OUT_DIR_CONFIGURATIONS}'"
+  cp -vr "${SRC_DIR_CONFIGURATIONS}" "${OUT_DIR_CONFIGURATIONS}"
 
-    echo -e "${accent}Copying assets to '$pixmaps'${default}"
-    mkdir -p "$pixmaps"
-    find "$repoRoot/OpenTabletDriver.UX/Assets" -type f -exec cp {} "$pixmaps" ';'
+  copy_assets "${OUT_DIR_PIXMAPS}"
 
-    echo -e "${accent}Removing all debug files... (.pdb)${default}"
-    find "$buildDir" -name "*.pdb" -type f -exec rm {} ';'
+	clean_debug "${OUT_DIR}"
 
-    echo -e "${accent}Updating size in DEBIAN/control${default}"
-    sed -i "s/Installed-Size:.\+$/Installed-Size: $(du -s "$activeRoot/OpenTabletDriver" | cut -f1)/g" "$DEBIAN/control"
+  update_size
+  update_version
 
-    version=$(get_group "$(cat $repoRoot/OpenTabletDriver/OpenTabletDriver.csproj)" '<VersionPrefix>(.+?)<\/VersionPrefix>' 1)
+  create_debpkg "${PKG_DIR}" "${PKG_DEB_FILE}"
 
-    echo -e "${accent}Updating version in DEBIAN/control${default}"
-    sed -i "s/Version:.\+$/Version: ${version}/g" "$DEBIAN/control"
+  print "Packaging complete."
+}
 
-    echo -e "${accent}Updating version in desktop file${default}"
-    sed -i "s/Version=.\+$/Version=${version}/g" "$desktop"
+copy_assets() {
+  [ "$#" -ne 1 ] && exit 102
+  ASSET_DIR="${SRC_DIR}/OpenTabletDriver.UX/Assets"
+  [ ! -d "${ASSET_DIR}" ] && exit 103
 
-    echo -e "${accent}Packaging 'OpenTabletDriver.deb'...${default}"
-    dpkg-deb --build "$activeRoot/OpenTabletDriver" "$deb"
+  print "Copying assets to '${1}'..."
+  mkdir -p "${1}"
+  for file in "${SRC_DIR}/OpenTabletDriver.UX/Assets/*"; do
+    [ -f "${file}" ] && cp -v "${file}" "${1}/$(basename ${file})"
+  done
+}
 
-    echo -e "${accent}Packaging complete.${default}"
+update_size() {
+  print "Updating size in DEBIAN/control"
+  regex_edit "Installed-Size:.\+$" "Installed-Size: $(du -s "${PKG_DIR}" | cut -f1)" "${DEBIAN_DIR}/control"
+}
+
+update_version() {
+  PKG_VERSION=$(get_group "$(cat ${SRC_DIR}/OpenTabletDriver/OpenTabletDriver.csproj)" '<VersionPrefix>(.+?)<\/VersionPrefix>' 1)
+
+  print "Updating version in DEBIAN/control"
+  regex_edit "Version: .\+$" "Version: ${PKG_VERSION}" "${DEBIAN_DIR}/control"
+
+  print "Updating version in desktop file"
+  regex_edit "Version=.\+$" "Version=${PKG_VERSION}" "${PKG_DESKTOP_FILE}"
+}
+
+create_debpkg () {
+  [ "$#" -ne 2 ] && exit 104
+  
+  print "Packaging 'OpenTabletDriver.deb'..."
+  dpkg-deb --build "${1}" "${2}"
 }
 
 case $1 in
     "clean") clean ;;
     "prepare") prepare ;;
     "build") build ;;
+    "package") package ;;
     *)
         clean
         prepare
         build
+        package
     ;;
 esac
