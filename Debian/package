@@ -50,15 +50,15 @@ clean() {
 }
 
 build() {
-	print "Building OpenTabletDriver..."
-	for project in ${PROJECTS[@]}; do
-		dotnet publish "${SRC_DIR}/${project}"\
-			--runtime ${RUNTIME} \
+  print "Building OpenTabletDriver..."
+  for project in ${PROJECTS[@]}; do
+    dotnet publish "${SRC_DIR}/${project}"\
+      --runtime ${RUNTIME} \
       --configuration Release \
       --self-contained false \
       --framework ${FRAMEWORK} \
       --output ${OUT_DIR}
-	done
+  done
 }
 
 package() {
@@ -69,7 +69,7 @@ package() {
 
   copy_assets "${OUT_DIR_PIXMAPS}"
 
-	clean_debug "${OUT_DIR}"
+  clean_debug "${OUT_DIR}"
 
   update_size
   update_version
