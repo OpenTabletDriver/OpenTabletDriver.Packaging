@@ -26,15 +26,9 @@ OUT_UDEV_FILE="${PKG_DIR}/usr/lib/udev/rules.d/99-opentabletdriver.rules"
 # Output
 
 clean() {
-  if [ -f "${PKG_DEB_FILE}" ]; then
-    print "Cleaning up existing builds..."
-    rm "$PKG_DEB_FILE"
-  fi
-
-  if [ -d "${OUT_DIR}" ]; then
-    print "Cleaning up build directory..."
-    rm -vrf "${OUT_DIR}"
-  fi
+  clean_target "${PKG_DEB_FILE}" "Cleaning up existing builds..."
+  clean_target "${OUT_DIR}" "Cleaning up build directory..."
+  clean_target "${OUT_UDEV_FILE}" "Cleaning existing udev rules..."
 
   print "Cleaning 'DEBIAN/control'..."
   regex_edit "^Installed-Size:.\+$" "Installed-Size: 0" "${DEBIAN_DIR}/control"
@@ -42,11 +36,6 @@ clean() {
 
   print "Cleaning desktop file..."
   regex_edit "^Version=.\+$" "Version=0.0.0" "${PKG_DESKTOP_FILE}"
-
-  if [ -e "$UDEV_RULES" ]; then
-    printf -e "${ACCENT}Cleaning existing udev rules...${RESET}"
-    rm -v $UDEV_RULES
-  fi
 }
 
 build() {

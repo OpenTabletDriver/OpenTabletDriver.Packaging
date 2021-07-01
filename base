@@ -77,8 +77,8 @@ clean_target() {
 }
 
 clean_debug() {
-  [ "$#" -ne 1 ] && exit 250
-  [ ! -d "${1}" ] && exit 251
+  [ "$#" -ne 1 ] && exit 240
+  [ ! -d "${1}" ] && exit 241
 
   print "Removing all debug files... (.pdb)"
   find "${1}" -name "*.pdb" -type f -exec rm {} ';'
