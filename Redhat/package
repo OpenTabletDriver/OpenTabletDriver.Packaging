@@ -29,8 +29,12 @@ clean() {
   clean_target "${PKG_RPM_FILE}" "Cleaning up existing builds..."
   clean_target "${OUT_DIR}" "Cleaning up build directory..."
   clean_target "${OUT_UDEV_FILE}" "Cleaning existing udev rules..."
-  clean_target "${OUT_DIR_PIXMAPS}" "Cleaning existing assets..."
-  rm -r BUILD BUILDROOT RPMS SOURCES SPECS SRPMS 2>/dev/null
+  clean_target "${SCRIPT_DIR}/BUILD" "Cleaning up BUILD folder..."
+  clean_target "${SCRIPT_DIR}/BUILDROOT" "Cleaning up BUILDROOT folder..."
+  clean_target "${SCRIPT_DIR}/RPMS" "Cleaning up RPMS folder..."
+  clean_target "${SCRIPT_DIR}/SOURCES" "Cleaning up SOURCES folder..."
+  clean_target "${SCRIPT_DIR}/SPECS" "Cleaning up SPECS folder..."
+  clean_target "${SCRIPT_DIR}/SRPMS" "Cleaning up SRPMS folder..."
 
   print "Cleaning 'opentabletdriver.spec'..."
   regex_edit "^Version: .\+$" "Version: 0.0.0" "${SPEC_FILE}"
