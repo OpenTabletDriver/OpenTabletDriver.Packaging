@@ -63,7 +63,7 @@ package() {
 
   update_version
 
-  create_rpmpkg "${PKG_DIR}" "${PKG_DEB_FILE}"
+  create_rpmpkg "${PKG_DIR}" "${PKG_RPM_FILE}"
 
   print "Packaging complete."
 }
@@ -92,8 +92,8 @@ create_rpmpkg() {
   [ "$#" -ne 2 ] && exit 104
   
   print "Packaging 'OpenTabletDriver.rpm'..."
-  rpmbuild -D "_topdir ${SCRIPT_DIR}" -D "pkg_dir ${PKG_DIR}" -bb ${SPEC_FILE}
-  mv ${SCRIPT_DIR}/RPMS/x86_64/opentabletdriver*.rpm ${PKG_RPM_FILE}
+  rpmbuild -D "_topdir ${SCRIPT_DIR}" -D "pkg_dir ${1}" -bb ${SPEC_FILE}
+  mv ${SCRIPT_DIR}/RPMS/x86_64/opentabletdriver*.rpm ${2}
 }
 
 case $1 in
