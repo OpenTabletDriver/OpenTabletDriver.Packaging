@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+SCRIPT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
+[ ! -d "${SCRIPT_DIR}" ] && exit 100;
+
+source "${SCRIPT_DIR}/../base"
+
+# Build arguments
+FRAMEWORK="net5"
+RUNTIME="linux-x64"
+PROJECTS=("OpenTabletDriver.Daemon" "OpenTabletDriver.Console" "OpenTabletDriver.UX.Gtk")
+
+# Directories
+PKG_DIR="${SCRIPT_DIR}/OpenTabletDriver"
+OUT_DIR="${PKG_DIR}/usr/share/OpenTabletDriver"
+OUT_DIR_CONFIGURATIONS="${OUT_DIR}/Configurations"
+OUT_DIR_PIXMAPS="${PKG_DIR}/usr/share/pixmaps"
+
+# Package
+PKG_RPM_FILE="${SCRIPT_DIR}/OpenTabletDriver.rpm"
+SPEC_FILE="${SCRIPT_DIR}/opentabletdriver.spec"
+
+# Files
+PKG_DESKTOP_FILE="${PKG_DIR}/usr/share/applications/OpenTabletDriver.desktop"
+OUT_UDEV_FILE="${PKG_DIR}/usr/lib/udev/rules.d/99-opentabletdriver.rules"
+
+# Output
+
+clean() {
+  clean_target "${PKG_RPM_FILE}" "Cleaning up existing builds..."
+  clean_target "${OUT_DIR}" "Cleaning up build directory..."
+  clean_target "${OUT_UDEV_FILE}" "Cleaning existing udev rules..."
+  clean_target "${SCRIPT_DIR}/BUILD" "Cleaning up BUILD folder..."
+  clean_target "${SCRIPT_DIR}/BUILDROOT" "Cleaning up BUILDROOT folder..."
+  clean_target "${SCRIPT_DIR}/RPMS" "Cleaning up RPMS folder..."
+  clean_target "${SCRIPT_DIR}/SOURCES" "Cleaning up SOURCES folder..."
+  clean_target "${SCRIPT_DIR}/SPECS" "Cleaning up SPECS folder..."
+  clean_target "${SCRIPT_DIR}/SRPMS" "Cleaning up SRPMS folder..."
+
+  print "Cleaning 'opentabletdriver.spec'..."
+  regex_edit "^Version: .\+$" "Version: 0.0.0" "${SPEC_FILE}"
+
+  print "Cleaning desktop file..."
+  regex_edit "^Version=.\+$" "Version=0.0.0" "${PKG_DESKTOP_FILE}"
+}
+
+build() {
+  print "Building OpenTabletDriver..."
+  for project in ${PROJECTS[@]}; do
+    dotnet publish "${SRC_DIR}/${project}"\
+      --runtime ${RUNTIME} \
+      --configuration Release \
+      --self-contained false \
+      --framework ${FRAMEWORK} \
+      --output ${OUT_DIR}
+  done
+}
+
+package() {
+  generate_rules "${SRC_DIR_CONFIGURATIONS}" "${OUT_UDEV_FILE}"
+
+  print "Copying all tablet configuration files to '${OUT_DIR_CONFIGURATIONS}'"
+  cp -vr "${SRC_DIR_CONFIGURATIONS}" "${OUT_DIR_CONFIGURATIONS}"
+
+  copy_assets "${OUT_DIR_PIXMAPS}"
+
+  clean_debug "${OUT_DIR}"
+
+  update_version
+
+  create_rpmpkg "${PKG_DIR}" "${PKG_RPM_FILE}"
+
+  print "Packaging complete."
+}
+
+copy_assets() {
+  [ "$#" -ne 1 ] && exit 102
+  ASSET_DIR="${SRC_DIR}/OpenTabletDriver.UX/Assets"
+  [ ! -d "${ASSET_DIR}" ] && exit 103
+
+  print "Copying assets to '${1}'..."
+  mkdir -p "${1}"
+  cp -v ${ASSET_DIR}/* "${1}"
+}
+
+update_version() {
+  PKG_VERSION=$(get_group "$(cat ${SRC_DIR}/OpenTabletDriver/OpenTabletDriver.csproj)" '<VersionPrefix>(.+?)<\/VersionPrefix>' 1)
+
+  print "Updating version in opentabletdriver.spec"
+  regex_edit "Version: .\+$" "Version: ${PKG_VERSION}" "${SPEC_FILE}"
+
+  print "Updating version in desktop file"
+  regex_edit "Version=.\+$" "Version=${PKG_VERSION}" "${PKG_DESKTOP_FILE}"
+}
+
+create_rpmpkg() {
+  [ "$#" -ne 2 ] && exit 104
+  
+  print "Packaging 'OpenTabletDriver.rpm'..."
+  rpmbuild -D "_topdir ${SCRIPT_DIR}" -D "pkg_dir ${1}" -bb ${SPEC_FILE}
+  mv ${SCRIPT_DIR}/RPMS/x86_64/opentabletdriver*.rpm ${2}
+}
+
+case $1 in
+    "clean") clean ;;
+    "prepare") prepare ;;
+    "build") build ;;
+    "package") package ;;
+    *)
+        clean
+        prepare
+        build
+        package
+    ;;
+esac
