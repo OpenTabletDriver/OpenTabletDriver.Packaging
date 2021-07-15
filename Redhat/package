@@ -56,6 +56,7 @@ build() {
 }
 
 package() {
+  mkdir -p ${SCRIPT_DIR}/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
   generate_rules "${SRC_DIR_CONFIGURATIONS}" "${OUT_UDEV_FILE}"
 
   print "Copying all tablet configuration files to '${OUT_DIR_CONFIGURATIONS}'"
