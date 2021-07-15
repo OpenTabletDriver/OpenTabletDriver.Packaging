@@ -30,6 +30,7 @@ build() {
       --runtime ${RUNTIME} \
       --configuration Release \
       --self-contained false \
+      /p:PublishTrimmed=false \
       --framework ${FRAMEWORK} \
       --output ${OUT_DIR}
   done
