@@ -4,11 +4,34 @@
 RESET="\e[39m"
 ACCENT="\e[96m"
 
+get_path() {
+  TARGET_FILE=$1
+
+  cd `dirname $TARGET_FILE`
+  TARGET_FILE=`basename $TARGET_FILE`
+
+  # Iterate down a (possible) chain of symlinks
+  while [ -L "$TARGET_FILE" ]
+  do
+    TARGET_FILE=`readlink $TARGET_FILE`
+    cd `dirname $TARGET_FILE`
+    TARGET_FILE=`basename $TARGET_FILE`
+  done
+
+  # Compute the canonicalized name by finding the physical path
+  # for the directory we're in and appending the target file.
+  PHYS_DIR=`pwd -P`
+  RESULT=$PHYS_DIR/$TARGET_FILE
+  echo $RESULT
+
+  cd - > /dev/null
+}
+
 # Working directories
-ROOT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
+ROOT_DIR=`dirname ${BASH_SOURCE[0]}`
 
 # Repositories
-REPO=("https://github.com/InfinityGhost/OpenTabletDriver" "$(readlink -f "${ROOT_DIR}/src/OpenTabletDriver")")
+REPO=("https://github.com/InfinityGhost/OpenTabletDriver" "$(get_path "${ROOT_DIR}/src/OpenTabletDriver")")
 SRC_DIR="${REPO[1]}"
 SRC_DIR_CONFIGURATIONS="${SRC_DIR}/OpenTabletDriver/Configurations"
 
@@ -51,7 +74,7 @@ create_tarball() {
   [ "$#" -ne 2 ] && exit 210
 
   print "Creating '${2}' from '${1}'"
-  cd $(dirname "${2}")
+  cd `dirname "${2}"`
   tar -zcvf "${2}" "$(basename ${1})"
 }
 
@@ -65,10 +88,10 @@ generate_rules() {
 
 clean_target() {
   [ "$#" -ne 2 ] && exit 230
-  
+
   if [ -e "${1}" ]; then
     print "${2}"
-    if [ -f "${1}" ]; then 
+    if [ -f "${1}" ]; then
       rm -vf "${1}"
     elif [ -d "${1}" ]; then
       rm -vrf "${1}"

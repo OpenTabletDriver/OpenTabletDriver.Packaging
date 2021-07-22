@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-SCRIPT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
+SCRIPT_DIR=`dirname ${BASH_SOURCE[0]}`
 [ ! -d "${SCRIPT_DIR}" ] && exit 100;
 
 source "${SCRIPT_DIR}/../base"
@@ -30,10 +30,10 @@ build() {
   for project in ${PROJECTS[@]}; do
     dotnet publish "${SRC_DIR}/${project}"\
       --runtime ${RUNTIME} \
-    --configuration Release \
-    --self-contained false \
-    --framework ${FRAMEWORK} \
-    --output ${OUT_DIR}
+      --configuration Release \
+      --self-contained false \
+      --framework ${FRAMEWORK} \
+      --output ${OUT_DIR}
   done
 }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-SCRIPT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
+SCRIPT_DIR=`dirname ${BASH_SOURCE[0]}`
 [ ! -d "${SCRIPT_DIR}" ] && exit 100;
 
 source "${SCRIPT_DIR}/../base"
@@ -86,7 +86,7 @@ update_size() {
 }
 
 update_version() {
-  PKG_VERSION=$(get_group "$(cat ${SRC_DIR}/OpenTabletDriver/OpenTabletDriver.csproj)" '<VersionPrefix>(.+?)<\/VersionPrefix>' 1)
+  PKG_VERSION=`get_group "$(cat ${SRC_DIR}/OpenTabletDriver/OpenTabletDriver.csproj)" '<VersionPrefix>(.+?)<\/VersionPrefix>' 1`
 
   print "Updating version in DEBIAN/control"
   regex_edit "Version: .\+$" "Version: ${PKG_VERSION}" "${DEBIAN_DIR}/control"
@@ -97,7 +97,7 @@ update_version() {
 
 create_debpkg () {
   [ "$#" -ne 2 ] && exit 104
-  
+
   print "Packaging 'OpenTabletDriver.deb'..."
   dpkg-deb --build "${1}" "${2}"
 }

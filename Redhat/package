@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-SCRIPT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
+SCRIPT_DIR=`dirname ${BASH_SOURCE[0]}`
 [ ! -d "${SCRIPT_DIR}" ] && exit 100;
 
 source "${SCRIPT_DIR}/../base"
@@ -95,7 +95,7 @@ update_version() {
 
 create_rpmpkg() {
   [ "$#" -ne 2 ] && exit 104
-  
+
   print "Packaging 'OpenTabletDriver.rpm'..."
   rpmbuild -D "_topdir ${SCRIPT_DIR}" -D "pkg_dir ${1}" -bb ${SPEC_FILE}
   mv ${SCRIPT_DIR}/RPMS/x86_64/opentabletdriver*.rpm ${2}
