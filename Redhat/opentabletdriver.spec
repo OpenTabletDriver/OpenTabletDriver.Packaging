@@ -39,8 +39,14 @@ cp %{pkg_dir}/LICENSE %{_builddir}
 
 %post
 udevadm control --reload-rules
-((lsmod | grep hid_uclogic > /dev/null) && rmmod hid_uclogic) || true
-((lsmod | grep wacom > /dev/null) && rmmod wacom) || true
+
+if lsmod | grep hid_uclogic > /dev/null ; then
+     rmmod hid_uclogic || true
+fi
+
+if lsmod | grep wacom > /dev/null ; then
+     rmmod wacom || true
+fi
 
 %files
 %defattr(-,root,root)
