@@ -1,1 +1,3 @@
 udevadm control --reload-rules
+((lsmod | grep hid_uclogic > /dev/null) && rmmod hid_uclogic) || true
+((lsmod | grep wacom > /dev/null) && rmmod wacom) || true
