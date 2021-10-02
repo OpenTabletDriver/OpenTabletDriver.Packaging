@@ -71,5 +71,6 @@ fi
 /usr/bin/opentabletdriver
 /usr/bin/otd
 /usr/lib/systemd/user/opentabletdriver.service
+/usr/lib/systemd/user-preset/50-opentabletdriver.preset
 
 %changelog
