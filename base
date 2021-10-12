@@ -10,7 +10,7 @@ ROOT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 # Repositories
 REPO=("https://github.com/InfinityGhost/OpenTabletDriver" "$(readlink -f "${ROOT_DIR}/src/OpenTabletDriver")")
 SRC_DIR="${REPO[1]}"
-SRC_DIR_CONFIGURATIONS="${SRC_DIR}/OpenTabletDriver/Configurations"
+SRC_DIR_CONFIGURATIONS="${SRC_DIR}/OpenTabletDriver.Configurations/Configurations"
 
 print() {
   printf "${ACCENT}$@${RESET}\n"
