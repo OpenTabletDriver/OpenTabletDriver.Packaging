@@ -25,7 +25,6 @@ clean() {
 build() {
   print "Building OpenTabletDriver..."
   for project in ${PROJECTS[@]}; do
-    print "$project BUILDING"
     dotnet publish "${SRC_DIR}/${project}"\
       --runtime ${RUNTIME} \
       --configuration Release \
