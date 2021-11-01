@@ -26,13 +26,10 @@ clean() {
   clean_target "${PKG_RPM_FILE}" "Cleaning up existing builds..."
   clean_target "${OUT_DIR}" "Cleaning up build directory..."
   clean_target "${OUT_UDEV_FILE}" "Cleaning existing udev rules..."
+  clean_target "${PKG_DIR}" "Cleaning up PKG_DIR..."
 
   for dir in ${RPM_TOPDIRS[@]}; do
     clean_target "${SCRIPT_DIR}/${dir}" "Cleaning up ${dir} folder..."
-  done
-
-  for file in $(ls ${PKG_DIR} | grep -v LICENSE); do
-    clean_target "${PKG_DIR}/${file}" "Cleaning up ${file} in PKG_DIR..."
   done
 
   print "Cleaning 'opentabletdriver.spec'..."
