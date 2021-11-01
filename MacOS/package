@@ -5,7 +5,6 @@ SCRIPT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 source "${SCRIPT_DIR}/../base"
 
 # Build arguments
-FRAMEWORK="net5"
 RUNTIME="osx-x64"
 PROJECTS=("OpenTabletDriver.Daemon" "OpenTabletDriver.UX.MacOS")
 
@@ -26,6 +25,7 @@ clean() {
 build() {
   print "Building OpenTabletDriver..."
   for project in ${PROJECTS[@]}; do
+    print "$project BUILDING"
     dotnet publish "${SRC_DIR}/${project}"\
       --runtime ${RUNTIME} \
       --configuration Release \

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Build arguments
+FRAMEWORK="net5"
+
 # Output stylization
 RESET="\e[39m"
 ACCENT="\e[96m"
@@ -10,7 +13,10 @@ ROOT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 # Repositories
 REPO=("https://github.com/InfinityGhost/OpenTabletDriver" "$(readlink -f "${ROOT_DIR}/src/OpenTabletDriver")")
 SRC_DIR="${REPO[1]}"
-SRC_DIR_CONFIGURATIONS="${SRC_DIR}/OpenTabletDriver/Configurations"
+SRC_DIR_CONFIGURATIONS="${SRC_DIR}/OpenTabletDriver.Configurations/Configurations"
+
+# Linux Packaging
+LINUX_COMMON_FILES="${ROOT_DIR}/Common/Linux"
 
 print() {
   printf "${ACCENT}$@${RESET}\n"
@@ -37,7 +43,7 @@ clone_repo() {
 }
 
 prepare() {
-	clone_repo ${REPO[@]}
+  clone_repo ${REPO[@]}
 }
 
 regex_edit() {
@@ -61,6 +67,26 @@ generate_rules() {
 
   print "Generating udev rules..."
 	"${SRC_DIR}/generate-rules.sh" -v "${1}" "${2}"
+}
+
+install_common_linux_files() {
+  print "Copying common files to ${1}..."
+  cp -vr ${LINUX_COMMON_FILES}/* "${1}"
+
+  print "Copying and compressing a man page..."
+  mkdir -p "${1}/usr/share/man/man8"
+  gzip -c "${SRC_DIR}/docs/manpages/opentabletdriver.8" > "${1}/usr/share/man/man8/opentabletdriver.8.gz"
+
+  print "Copying assets to ${1}..."
+  mkdir -p "${1}/usr/share/pixmaps"
+  cp -v ${SRC_DIR}/OpenTabletDriver.UX/Assets/* "${1}/usr/share/pixmaps"
+
+  mkdir -p "${1}/usr/lib/udev/rules.d"
+  generate_rules "${SRC_DIR_CONFIGURATIONS}" "${1}/usr/lib/udev/rules.d/99-opentabletdriver.rules"
+
+  print "Updating version in desktop file"
+  PKG_VERSION=$(get_group "$(cat ${SRC_DIR}/OpenTabletDriver/OpenTabletDriver.csproj)" '<VersionPrefix>(.+?)<\/VersionPrefix>' 1)
+  regex_edit "Version=.\+$" "Version=${PKG_VERSION}" "${1}/usr/share/applications/OpenTabletDriver.desktop"
 }
 
 clean_target() {

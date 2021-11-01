@@ -5,7 +5,6 @@ SCRIPT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 source "${SCRIPT_DIR}/../base"
 
 # Build arguments
-FRAMEWORK="net5"
 RUNTIME="linux-x64"
 PROJECTS=("OpenTabletDriver.Daemon" "OpenTabletDriver.Console" "OpenTabletDriver.UX.Gtk")
 
@@ -13,15 +12,10 @@ PROJECTS=("OpenTabletDriver.Daemon" "OpenTabletDriver.Console" "OpenTabletDriver
 PKG_DIR="${SCRIPT_DIR}/OpenTabletDriver"
 OUT_DIR="${PKG_DIR}/usr/share/OpenTabletDriver"
 OUT_DIR_CONFIGURATIONS="${OUT_DIR}/Configurations"
-OUT_DIR_PIXMAPS="${PKG_DIR}/usr/share/pixmaps"
 
 # Package
 PKG_DEB_FILE="${SCRIPT_DIR}/OpenTabletDriver.deb"
 DEBIAN_DIR="${PKG_DIR}/DEBIAN"
-
-# Files
-PKG_DESKTOP_FILE="${PKG_DIR}/usr/share/applications/OpenTabletDriver.desktop"
-OUT_UDEV_FILE="${PKG_DIR}/usr/lib/udev/rules.d/99-opentabletdriver.rules"
 
 # Output
 
@@ -30,16 +24,18 @@ clean() {
   clean_target "${OUT_DIR}" "Cleaning up build directory..."
   clean_target "${OUT_UDEV_FILE}" "Cleaning existing udev rules..."
 
+  for file in $(ls ${PKG_DIR} | grep -v DEBIAN); do
+    clean_target "${PKG_DIR}/${file}" "Cleaning up ${file} in PKG_DIR..."
+  done
+
   print "Cleaning 'DEBIAN/control'..."
   regex_edit "^Installed-Size:.\+$" "Installed-Size: 0" "${DEBIAN_DIR}/control"
   regex_edit "^Version: .\+$" "Version: 0.0.0" "${DEBIAN_DIR}/control"
-
-  print "Cleaning desktop file..."
-  regex_edit "^Version=.\+$" "Version=0.0.0" "${PKG_DESKTOP_FILE}"
 }
 
 build() {
   print "Building OpenTabletDriver..."
+  mkdir -p ${OUT_DIR}
   for project in ${PROJECTS[@]}; do
     dotnet publish "${SRC_DIR}/${project}"\
       --runtime ${RUNTIME} \
@@ -51,12 +47,10 @@ build() {
 }
 
 package() {
-  generate_rules "${SRC_DIR_CONFIGURATIONS}" "${OUT_UDEV_FILE}"
+  install_common_linux_files "${PKG_DIR}"
 
   print "Copying all tablet configuration files to '${OUT_DIR_CONFIGURATIONS}'"
   cp -vr "${SRC_DIR_CONFIGURATIONS}" "${OUT_DIR_CONFIGURATIONS}"
-
-  copy_assets "${OUT_DIR_PIXMAPS}"
 
   clean_debug "${OUT_DIR}"
 
@@ -66,18 +60,6 @@ package() {
   create_debpkg "${PKG_DIR}" "${PKG_DEB_FILE}"
 
   print "Packaging complete."
-}
-
-copy_assets() {
-  [ "$#" -ne 1 ] && exit 102
-  ASSET_DIR="${SRC_DIR}/OpenTabletDriver.UX/Assets"
-  [ ! -d "${ASSET_DIR}" ] && exit 103
-
-  print "Copying assets to '${1}'..."
-  mkdir -p "${1}"
-  for file in "${SRC_DIR}/OpenTabletDriver.UX/Assets/*"; do
-    [ -f "${file}" ] && cp -v "${file}" "${1}/$(basename ${file})"
-  done
 }
 
 update_size() {
@@ -90,9 +72,6 @@ update_version() {
 
   print "Updating version in DEBIAN/control"
   regex_edit "Version: .\+$" "Version: ${PKG_VERSION}" "${DEBIAN_DIR}/control"
-
-  print "Updating version in desktop file"
-  regex_edit "Version=.\+$" "Version=${PKG_VERSION}" "${PKG_DESKTOP_FILE}"
 }
 
 create_debpkg () {
