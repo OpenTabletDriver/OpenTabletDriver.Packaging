@@ -3,7 +3,7 @@ Version: 0.0.0
 Section: base
 Priority: optional
 Architecture: amd64
-Depends: libevdev-dev, libgtk-3-0, libappindicator3-dev, dotnet-runtime-5.0
+Depends: libevdev-dev, libgtk-3-0, libayatana-appindicator-dev, dotnet-runtime-5.0
 Recommends: libx11-dev, libxrandr-dev
 Installed-Size: 0
 Maintainer: InfinityGhost <infinityghostgit@gmail.com>
