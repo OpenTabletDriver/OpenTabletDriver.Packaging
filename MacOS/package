@@ -5,14 +5,13 @@ SCRIPT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 source "${SCRIPT_DIR}/../base"
 
 # Build arguments
-FRAMEWORK="net5"
+FRAMEWORK="net6.0"
 RUNTIME="osx-x64"
 PROJECTS=("OpenTabletDriver.Daemon" "OpenTabletDriver.UX.MacOS")
 
 # Directories
 PKG_DIR="${SCRIPT_DIR}/OpenTabletDriver.app"
 OUT_DIR="${PKG_DIR}/Contents/MacOS"
-OUT_DIR_CONFIGURATIONS="${OUT_DIR}/Configurations"
 
 # Package
 PKG_ICONS_FILE="${PKG_DIR}/Contents/Resources/Icon.icns"
@@ -29,17 +28,15 @@ build() {
     dotnet publish "${SRC_DIR}/${project}"\
       --runtime ${RUNTIME} \
       --configuration Release \
-      --self-contained false \
-      /p:PublishTrimmed=false \
+      --self-contained true \
       --framework ${FRAMEWORK} \
-      --output ${OUT_DIR}
+      --output ${OUT_DIR} \
+      /p:PublishTrimmed=true \
+      /p:VersionSuffix="${VERSION_SUFFIX}"
   done
 }
 
 package() {
-  print "Copying all tablet configuration files to '${OUT_DIR_CONFIGURATIONS}'"
-  cp -vr "${SRC_DIR_CONFIGURATIONS}" "${OUT_DIR_CONFIGURATIONS}"
-
   clean_debug "${OUT_DIR}"
 
   print "Copying MacOS assets..."

@@ -10,7 +10,7 @@ ROOT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 # Repositories
 REPO=("https://github.com/InfinityGhost/OpenTabletDriver" "$(readlink -f "${ROOT_DIR}/src/OpenTabletDriver")")
 SRC_DIR="${REPO[1]}"
-SRC_DIR_CONFIGURATIONS="${SRC_DIR}/OpenTabletDriver/Configurations"
+SRC_DIR_CONFIGURATIONS="${SRC_DIR}/OpenTabletDriver.Configurations/Configurations"
 
 print() {
   printf "${ACCENT}$@${RESET}\n"
@@ -21,6 +21,9 @@ get_group() {
     echo ${BASH_REMATCH[$3]}
   fi
 }
+
+# Package Information
+PKG_VERSION="$(get_group "$(cat ${SRC_DIR}/Directory.Build.props)" '<VersionBase>(.+?)<\/VersionBase>' 1)${VERSION_SUFFIX}"
 
 clone_repo() {
   args=("$@")
@@ -65,10 +68,10 @@ generate_rules() {
 
 clean_target() {
   [ "$#" -ne 2 ] && exit 230
-  
+
   if [ -e "${1}" ]; then
     print "${2}"
-    if [ -f "${1}" ]; then 
+    if [ -f "${1}" ]; then
       rm -vf "${1}"
     elif [ -d "${1}" ]; then
       rm -vrf "${1}"

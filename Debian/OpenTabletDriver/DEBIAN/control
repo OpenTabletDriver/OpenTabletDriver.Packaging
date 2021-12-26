@@ -3,10 +3,10 @@ Version: 0.0.0
 Section: base
 Priority: optional
 Architecture: amd64
-Depends: libevdev-dev, libgtk-3-0, libappindicator3-dev, dotnet-runtime-5.0
-Recommends: libx11-dev, libxrandr-dev
+Depends: libevdev, libgtk-3-0, libappindicator3,  dotnet-runtime-6.0
+Recommends: libx11, libxrandr
 Installed-Size: 0
 Maintainer: InfinityGhost <infinityghostgit@gmail.com>
-Homepage: https://github.com/InfinityGhost/OpenTabletDriver
+Homepage: https://opentabletdriver.net
 Description: OpenTabletDriver
  A cross-platform open source tablet driver.

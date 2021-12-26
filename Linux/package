@@ -5,13 +5,12 @@ SCRIPT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 source "${SCRIPT_DIR}/../base"
 
 # Build arguments
-FRAMEWORK="net5"
+FRAMEWORK="net6.0"
 RUNTIME="linux-x64"
 PROJECTS=("OpenTabletDriver.Daemon" "OpenTabletDriver.Console" "OpenTabletDriver.UX.Gtk")
 
 # Directories
 OUT_DIR="${SCRIPT_DIR}/OpenTabletDriver"
-OUT_DIR_CONFIGURATIONS="${OUT_DIR}/Configurations"
 
 # Package
 PKG_TARBALL_FILE="${SCRIPT_DIR}/OpenTabletDriver.${RUNTIME}.tar.gz"
@@ -28,20 +27,18 @@ clean() {
 build() {
   print "Building OpenTabletDriver..."
   for project in ${PROJECTS[@]}; do
-    dotnet publish "${SRC_DIR}/${project}"\
+    dotnet publish "${SRC_DIR}/${project}" \
       --runtime ${RUNTIME} \
-    --configuration Release \
-    --self-contained false \
-    --framework ${FRAMEWORK} \
-    --output ${OUT_DIR}
+      --configuration Release \
+      --self-contained false \
+      --framework ${FRAMEWORK} \
+      --output ${OUT_DIR} \
+      /p:VersionSuffix="${VERSION_SUFFIX}"
   done
 }
 
 package() {
   generate_rules "${SRC_DIR_CONFIGURATIONS}" "${OUT_UDEV_FILE}"
-
-  print "Copying all tablet configuration files to '${OUT_DIR_CONFIGURATIONS}'"
-  cp -vr "${SRC_DIR_CONFIGURATIONS}" "${OUT_DIR_CONFIGURATIONS}"
 
   clean_debug "${OUT_DIR}"
 
@@ -59,6 +56,6 @@ case $1 in
     clean
     prepare
     build
-  package
+    package
   ;;
 esac

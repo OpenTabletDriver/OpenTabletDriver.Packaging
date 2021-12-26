@@ -13,9 +13,6 @@ $src = "$root/../src"
 $otdRepo = @('https://github.com/InfinityGhost/OpenTabletDriver', "$src/OpenTabletDriver")
 $repoRoot = $otdRepo[1]
 
-# Common variables
-$configurations = "$repoRoot/OpenTabletDriver/Configurations"
-
 function clone_repo($repo) {
     if (! $repo.Count -eq 2) {
         Write-Host "Invalid clone arguments."
@@ -30,7 +27,7 @@ function clone_repo($repo) {
 }
 
 # Build arguments
-$framework = @('net5', 'net5-windows')
+$framework = @('net6.0', 'net6.0-windows')
 $runtime = "win-x64"
 $projects = @('OpenTabletDriver.Daemon', 'OpenTabletDriver.UX.Wpf')
 
@@ -63,12 +60,9 @@ function build() {
     Write-Host "Building OpenTabletDriver..." -ForegroundColor $accent
     $index = 0
     foreach ($proj in $projects) {
-        dotnet publish "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --framework $framework[$index] --self-contained false -p:PublishSingleFile=true -o $buildDir 
+        dotnet publish "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --framework $framework[$index] --self-contained false -p:PublishSingleFile=true -o $buildDir
         $index++
     }
-
-    Write-Host "Copying configurations to build directory..." -ForegroundColor $accent
-    Copy-Item -Path $configurations -Destination $buildDir -Recurse -Verbose
 
     Write-Host "Cleaning debug files... (*.pdb)" -ForegroundColor $accent
     Get-ChildItem $buildDir | Where-Object {$_.Name -Match '\.pdb$'} | Remove-Item -Verbose
