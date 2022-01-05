@@ -60,7 +60,7 @@ function build() {
     Write-Host "Building OpenTabletDriver..." -ForegroundColor $accent
     $index = 0
     foreach ($proj in $projects) {
-        dotnet publish "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --framework $framework[$index] --self-contained false -p:PublishSingleFile=true -o $buildDir
+        dotnet publish "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --framework $framework[$index] --self-contained false -p:PublishSingleFile=true -o $buildDir /p:VersionSuffix="${ENV:VERSION_SUFFIX}"
         $index++
     }
 
