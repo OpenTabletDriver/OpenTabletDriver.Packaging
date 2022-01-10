@@ -5,10 +5,10 @@ RESET="\e[39m"
 ACCENT="\e[96m"
 
 # Working directories
-ROOT_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
+ROOT_DIR=$(realpath $(dirname ${BASH_SOURCE[0]}))
 
 # Repositories
-REPO=("https://github.com/InfinityGhost/OpenTabletDriver" "$(readlink -f "${ROOT_DIR}/src/OpenTabletDriver")")
+REPO=("https://github.com/InfinityGhost/OpenTabletDriver" "$(realpath "${ROOT_DIR}/src/OpenTabletDriver")")
 SRC_DIR="${REPO[1]}"
 SRC_DIR_CONFIGURATIONS="${SRC_DIR}/OpenTabletDriver.Configurations/Configurations"
 
