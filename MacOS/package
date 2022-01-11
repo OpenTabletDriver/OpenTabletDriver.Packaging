@@ -31,7 +31,7 @@ build() {
       --self-contained true \
       --framework ${FRAMEWORK} \
       --output ${OUT_DIR} \
-      /p:PublishTrimmed=true \
+      /p:PublishTrimmed=false \
       /p:VersionSuffix="${VERSION_SUFFIX}"
   done
 }
