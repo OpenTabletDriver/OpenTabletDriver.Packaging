@@ -5,7 +5,7 @@ Summary: A cross-platform open source tablet driver
 License: LGPLv3
 URL: https://github.com/OpenTabletDriver/OpenTabletDriver
 
-Requires: dotnet-runtime-5.0
+Requires: dotnet-runtime-6.0
 Requires: pkgconfig(libevdev)
 Requires: gtk3
 Recommends: pkgconfig(xrandr)
