@@ -23,7 +23,9 @@ get_group() {
 }
 
 # Package Information
-PKG_VERSION="$(get_group "$(cat ${SRC_DIR}/Directory.Build.props)" '<VersionBase>(.+?)<\/VersionBase>' 1)${VERSION_SUFFIX}"
+if [ -z "$PKG_VERSION" ]; then
+  PKG_VERSION="$(get_group "$(cat ${SRC_DIR}/Directory.Build.props)" '<VersionBase>(.+?)<\/VersionBase>' 1)${VERSION_SUFFIX}"
+fi
 
 clone_repo() {
   args=("$@")
