@@ -59,8 +59,16 @@ function prepare() {
 function build() {
     Write-Host "Building OpenTabletDriver..." -ForegroundColor $accent
     $index = 0
+
     foreach ($proj in $projects) {
-        dotnet publish "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --framework $framework[$index] --self-contained false -p:PublishSingleFile=true -o $buildDir /p:VersionBase="${ENV:PKG_VERSION}" /p:VersionSuffix="${ENV:VERSION_SUFFIX}"
+        $dotnetArgs="--runtime $runtime --configuration Release --framework ${framework[index]} --self-contained false /p:PublishSingleFile=true"
+        if (${ENV:PKG_VERSION} -ne $NULL) {
+            $dotnetArgs+=" /p:VersionBase=${ENV:PKG_VERSION}"
+        }
+        if (${ENV:VERSION_SUFFIX} -ne $NULL) {
+            $dotnetArgs+=" /p:VersionSuffix=${ENV:VERSION_SUFFIX}"
+        }
+        dotnet publish "$repoRoot/$proj/$proj.csproj" $dotnetArgs
         $index++
     }
 
