@@ -5,6 +5,7 @@ Summary: A cross-platform open source tablet driver
 License: LGPLv3
 URL: https://github.com/OpenTabletDriver/OpenTabletDriver
 
+AutoReqProv: no
 Requires: dotnet-runtime-6.0
 Requires: pkgconfig(libevdev)
 Requires: gtk3
@@ -18,12 +19,8 @@ OpenTabletDriver is an open source, cross platform, user mode tablet driver. The
 mkdir -p %{buildroot}
 cp -r %{pkg_dir}/* %{buildroot}/
 
-%pre
-%systemd_user_pre opentabletdriver.service
-
 %post
 udevadm control --reload-rules
-%systemd_user_post opentabletdriver.service
 
 if lsmod | grep hid_uclogic > /dev/null ; then
      rmmod hid_uclogic || true
@@ -32,12 +29,6 @@ fi
 if lsmod | grep wacom > /dev/null ; then
      rmmod wacom || true
 fi
-
-%preun
-%systemd_user_preun opentabletdriver.service
-
-%postun
-%systemd_user_postun opentabletdriver.service
 
 %files
 %defattr(-,root,root)
@@ -52,6 +43,5 @@ fi
 /usr/bin/opentabletdriver
 /usr/bin/otd
 /usr/lib/systemd/user/opentabletdriver.service
-/usr/lib/systemd/user-preset/50-opentabletdriver.preset
 /usr/lib/udev/rules.d/99-opentabletdriver.rules
 /usr/lib/modprobe.d/99-opentabletdriver.conf
