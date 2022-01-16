@@ -13,9 +13,8 @@ License: LGPLv3
 
 URL: https://github.com/OpenTabletDriver/OpenTabletDriver
 
-Requires: dotnet-runtime-5.0
+Requires: dotnet-runtime-6.0
 Requires: pkgconfig(libevdev)
-# Requires: pkgconfig(appindicator3-0.1) <- it is included in deb package but not in aur
 Requires: gtk3
 Recommends: pkgconfig(xrandr)
 Recommends: pkgconfig(x11)
@@ -38,7 +37,6 @@ rm %{buildroot}/LICENSE
 cp %{pkg_dir}/LICENSE %{_builddir}
 
 %pre
-%systemd_user_pre opentabletdriver.service
 
 %post
 udevadm control --reload-rules
