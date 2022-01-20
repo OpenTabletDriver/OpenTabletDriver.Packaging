@@ -19,7 +19,12 @@ License: LGPLv3
 %endif
 
 URL: https://github.com/OpenTabletDriver/OpenTabletDriver
+# if devel_package is 1
+%if 0%{?devel_package:1}
+Source0: opentabletdriver.tar.gz
+%else
 Source0: https://github.com/OpenTabletDriver/OpenTabletDriver/archive/refs/tags/v%{version}.tar.gz
+%endif
 # commands and binaries
 Source1: opentabletdriver
 Source2: otd
@@ -55,8 +60,11 @@ OpenTabletDriver is an open source, cross platform, user mode tablet driver. The
 rm -f %{_builddir}/LICENSE
 
 %prep
+%if 0%{?devel_package:1}
+%autosetup -n OpenTabletDriver
+%else
 %autosetup -n OpenTabletDriver-%{version}
-
+%endif
 %build
 ./build.sh
 

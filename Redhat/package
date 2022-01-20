@@ -35,12 +35,16 @@ clean() {
   clean_target "${SCRIPT_DIR}/SOURCES" "Cleaning up SOURCES folder..."
   clean_target "${SCRIPT_DIR}/SPECS" "Cleaning up SPECS folder..."
   clean_target "${SCRIPT_DIR}/SRPMS" "Cleaning up SRPMS folder..."
-
+  rm -f opentabletdriver.tar.gz
   print "Cleaning 'opentabletdriver.spec'..."
   regex_edit "^Version: .\+$" "Version: 0.0.0" "${SPEC_FILE}"
 
   print "Cleaning desktop file..."
   regex_edit "^Version=.\+$" "Version=0.0.0" "${PKG_DESKTOP_FILE}"
+}
+
+build(){
+  tar -zcvf opentabletdriver.tar.gz -C "${SCRIPT_DIR}/../src" .
 }
 
 package() {
@@ -49,16 +53,6 @@ package() {
   create_rpmpkg "${PKG_DIR}" "${PKG_RPM_FILE}"
 
   print "Packaging complete."
-}
-
-copy_assets() {
-  [ "$#" -ne 1 ] && exit 102
-  ASSET_DIR="${SRC_DIR}/OpenTabletDriver.UX/Assets"
-  [ ! -d "${ASSET_DIR}" ] && exit 103
-
-  print "Copying assets to '${1}'..."
-  mkdir -p "${1}"
-  cp -v ${ASSET_DIR}/* "${1}"
 }
 
 update_version() {
@@ -72,17 +66,17 @@ update_version() {
 create_rpmpkg() {
   [ "$#" -ne 2 ] && exit 104
   print "Packaging 'OpenTabletDriver.rpm'..."
-  rpmbuild -D "_topdir ${SCRIPT_DIR}" -D "pkg_dir ${1}" -D "_sourcedir ${SCRIPT_DIR}" -bb ${SPEC_FILE}
+  rpmbuild -D "_topdir ${SCRIPT_DIR}" -D "pkg_dir ${1}" -D "_sourcedir ${SCRIPT_DIR}" -bb ${SPEC_FILE} -D "devel_package 1"
   mv ${SCRIPT_DIR}/RPMS/x86_64/opentabletdriver*.rpm ${2}
 }
 
 case $1 in
     "clean") clean ;;
-    "prepare") prepare ;;
-    "build") echo "Build task is not supported for RPM packages. Simply use 'package' instead." ;;
+    "build") build ;;
     "package") package ;;
     *)
         clean
+        build
         package
     ;;
 esac
