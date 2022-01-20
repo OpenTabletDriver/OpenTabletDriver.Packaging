@@ -27,7 +27,7 @@ function clone_repo($repo) {
 }
 
 # Build arguments
-$framework = @('net6.0', 'net6.0-windows')
+$frameworks = @('net6.0', 'net6.0-windows')
 $runtime = "win-x64"
 $projects = @('OpenTabletDriver.Daemon', 'OpenTabletDriver.UX.Wpf')
 
@@ -59,8 +59,25 @@ function prepare() {
 function build() {
     Write-Host "Building OpenTabletDriver..." -ForegroundColor $accent
     $index = 0
+
     foreach ($proj in $projects) {
-        dotnet publish "$repoRoot/$proj/$proj.csproj" --runtime $runtime --configuration Release --framework $framework[$index] --self-contained false -p:PublishSingleFile=true -o $buildDir /p:VersionSuffix="${ENV:VERSION_SUFFIX}"
+        $dotnetArgs=@(
+            "--runtime", "$runtime",
+            "--configuration", "Release",
+            "--framework", $frameworks[$index],
+            "--self-contained", "false",
+            "--output", "$buildDir"
+            "/p:PublishSingleFile=true"
+        )
+
+        if (${ENV:PKG_VERSION} -ne $NULL) {
+            $dotnetArgs+=@("/p:VersionBase=${ENV:PKG_VERSION}")
+        }
+        if (${ENV:VERSION_SUFFIX} -ne $NULL) {
+            $dotnetArgs+=@("/p:VersionSuffix=${ENV:VERSION_SUFFIX}")
+        }
+
+        dotnet publish "$repoRoot/$proj/$proj.csproj" $dotnetArgs
         $index++
     }
 

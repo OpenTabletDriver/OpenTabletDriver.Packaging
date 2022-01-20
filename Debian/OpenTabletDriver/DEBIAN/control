@@ -3,8 +3,8 @@ Version: 0.0.0
 Section: base
 Priority: optional
 Architecture: amd64
-Depends: libevdev2, libgtk-3-0, libappindicator3-1,  dotnet-runtime-6.0
-Recommends: libx11-6, libxrandr2
+Depends: libevdev2, libgtk-3-0, dotnet-runtime-6.0
+Recommends: libx11-dev, libxrandr-dev
 Installed-Size: 0
 Maintainer: InfinityGhost <infinityghostgit@gmail.com>
 Homepage: https://opentabletdriver.net
