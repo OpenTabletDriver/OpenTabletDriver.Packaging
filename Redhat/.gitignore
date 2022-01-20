@@ -2,3 +2,4 @@ OpenTabletDriver/usr/share/OpenTabletDriver/
 OpenTabletDriver/usr/share/pixmaps/
 OpenTabletDriver/usr/lib/udev/rules.d/
 *.rpm
+*.tar.gz

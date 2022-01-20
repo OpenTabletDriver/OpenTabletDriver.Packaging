@@ -1,8 +1,15 @@
+# saves time so we don't have to download the thing manually
+%undefine _disable_source_fetch
+# We don't have debug symbols, because .NET
+%define debug_package %{nil}
+
 Name: opentabletdriver
-Version: 0.0.0
+Version: 0.6.0.2
 Release: 1
 Summary: A cross-platform open source tablet driver
 BuildArch: x86_64
+# We aren't using Mono but RPM expected Mono
+%global __requires_exclude_from ^/usr/share/OpenTabletDriver/.*$
 
 %if 0%{?suse_version}
 License: LGPL-3.0-only
@@ -12,9 +19,28 @@ License: LGPLv3
 %endif
 
 URL: https://github.com/OpenTabletDriver/OpenTabletDriver
+Source0: https://github.com/OpenTabletDriver/OpenTabletDriver/archive/refs/tags/v%{version}.tar.gz
+# commands and binaries
+Source1: opentabletdriver
+Source2: otd
 
+#modprobe rules
+Source3: 99-opentabletdriver.conf
+# systemd
+Source4: opentabletdriver.service
+Source5: 50-opentabletdriver.preset
+Source6: OpenTabletDriver.desktop
+
+BuildRequires: dotnet-sdk-6.0
+BuildRequires: systemd-rpm-macros
+BuildRequires: libX11-devel
+BuildRequires: libXrandr-devel
+BuildRequires: gtk3-devel
 Requires: dotnet-runtime-6.0
 Requires: pkgconfig(libevdev)
+Requires: libX11
+Requires: libXrandr
+Requires: libevdev
 Requires: gtk3
 Recommends: pkgconfig(xrandr)
 Recommends: pkgconfig(x11)
@@ -26,17 +52,41 @@ OpenTabletDriver is an open source, cross platform, user mode tablet driver. The
 rm -f %{_builddir}/LICENSE
 
 %prep
+%autosetup -n OpenTabletDriver-%{version}
 
 %build
+./build.sh
 
 %install
-mkdir -p %{buildroot}
-cp -r %{pkg_dir}/* %{buildroot}/
-rm %{buildroot}/LICENSE
 
-cp %{pkg_dir}/LICENSE %{_builddir}
+mkdir -p %{buildroot}%{_datadir}
+mv bin/ %{buildroot}%{_datadir}/OpenTabletDriver/
 
-%pre
+# copy udev rules
+./generate-rules.sh
+mkdir -p %{buildroot}/etc/udev/rules.d
+install -D -m 644 ./bin/99-opentabletdriver.rules %{buildroot}/usr/lib/udev/rules.d/99-opentabletdriver.rules
+
+mkdir -p %{buildroot}%{_bindir}
+# the commands and binaries
+install -m 0755 %{SOURCE1} %{buildroot}%{_bindir}/opentabletdriver
+install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/otd
+# modprobe rules
+mkdir -p %{buildroot}/usr/lib/modprobe.d
+install -m 0644 %{SOURCE3} %{buildroot}/usr/lib/modprobe.d/99-opentabletdriver.conf
+# systemd stuff
+mkdir -p %{buildroot}%{_userunitdir}
+install -m 0644 %{SOURCE4} %{buildroot}%{_userunitdir}/opentabletdriver.service
+mkdir -p %{buildroot}/usr/lib/systemd/user-preset/
+install -m 0644 %{SOURCE5} %{buildroot}/usr/lib/systemd/user-preset/50-opentabletdriver.preset
+
+# finally, the desktop file
+mkdir -p %{buildroot}%{_datadir}/applications
+install -m 0644 %{SOURCE6} %{buildroot}%{_datadir}/applications/OpenTabletDriver.desktop
+
+# then desktop icons
+mkdir -p %{buildroot}%{_datadir}/pixmaps
+cp -rv OpenTabletDriver.UX/Assets/* %{buildroot}%{_datadir}/pixmaps/
 
 %post
 udevadm control --reload-rules
@@ -59,15 +109,15 @@ fi
 %files
 %defattr(-,root,root)
 %license LICENSE
-%dir /usr/share/OpenTabletDriver
-/usr/share/OpenTabletDriver/*
+%dir %{_datadir}/OpenTabletDriver
+%{_datadir}/OpenTabletDriver/
 /usr/lib/udev/rules.d/99-opentabletdriver.rules
 /usr/lib/modprobe.d/99-opentabletdriver.conf
-/usr/share/pixmaps/otd.ico
-/usr/share/pixmaps/otd.png
-/usr/share/applications/OpenTabletDriver.desktop
-/usr/bin/opentabletdriver
-/usr/bin/otd
+%{_datadir}/pixmaps/otd.ico
+%{_datadir}/pixmaps/otd.png
+%{_datadir}/applications/OpenTabletDriver.desktop
+%{_bindir}/opentabletdriver
+%{_bindir}/otd
 /usr/lib/systemd/user/opentabletdriver.service
 /usr/lib/systemd/user-preset/50-opentabletdriver.preset
 
