@@ -42,6 +42,9 @@ Requires: libX11
 Requires: libXrandr
 Requires: libevdev
 Requires: gtk3
+Requires: libX11-devel
+Requires: libXrandr-devel
+Requires: gtk3-devel
 Recommends: pkgconfig(xrandr)
 Recommends: pkgconfig(x11)
 
