@@ -43,28 +43,8 @@ clean() {
   regex_edit "^Version=.\+$" "Version=0.0.0" "${PKG_DESKTOP_FILE}"
 }
 
-build() {
-  print "Building OpenTabletDriver..."
-  for project in ${PROJECTS[@]}; do
-    dotnet publish "${SRC_DIR}/${project}"\
-      --runtime ${RUNTIME} \
-      --configuration Release \
-      --self-contained false \
-      --framework ${FRAMEWORK} \
-      --output ${OUT_DIR} \
-      /p:VersionSuffix="${VERSION_SUFFIX}"
-  done
-}
-
 package() {
   mkdir -p ${SCRIPT_DIR}/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
-  generate_rules "${SRC_DIR_CONFIGURATIONS}" "${OUT_UDEV_FILE}"
-
-  copy_assets "${OUT_DIR_PIXMAPS}"
-
-  clean_debug "${OUT_DIR}"
-
-  update_version
 
   create_rpmpkg "${PKG_DIR}" "${PKG_RPM_FILE}"
 
@@ -91,21 +71,18 @@ update_version() {
 
 create_rpmpkg() {
   [ "$#" -ne 2 ] && exit 104
-  
   print "Packaging 'OpenTabletDriver.rpm'..."
-  rpmbuild -D "_topdir ${SCRIPT_DIR}" -D "pkg_dir ${1}" -bb ${SPEC_FILE}
+  rpmbuild -D "_topdir ${SCRIPT_DIR}" -D "pkg_dir ${1}" -D "_sourcedir ${SCRIPT_DIR}" -bb ${SPEC_FILE}
   mv ${SCRIPT_DIR}/RPMS/x86_64/opentabletdriver*.rpm ${2}
 }
 
 case $1 in
     "clean") clean ;;
     "prepare") prepare ;;
-    "build") build ;;
+    "build") echo "Build task is not supported for RPM packages. Simply use 'package' instead." ;;
     "package") package ;;
     *)
         clean
-        prepare
-        build
         package
     ;;
 esac
