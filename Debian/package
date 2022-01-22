@@ -39,6 +39,7 @@ Format: 3.0 (quilt)
 Source: opentabletdriver
 Version: ${PKG_VERSION}
 Binary: opentabletdriver
+Build-Depends: dotnet-sdk-6.0
 Maintainer: InfinityGhost <infinityghostgit@gmail.com>, hwsnemo <hwsnemo@gmail.com>
 Architecture: amd64
 Standards-Version: 3.7.1
