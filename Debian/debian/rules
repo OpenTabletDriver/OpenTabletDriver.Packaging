@@ -1,0 +1,30 @@
+#!/usr/bin/make -f
+SHELL=/usr/bin/env bash
+PREFIX = debian/tmp/usr
+PKG_VERSION = $(shell [[ $$(cat Directory.Build.props) =~ \<VersionBase\>(.+?)\<\/VersionBase\> ]] && echo $${BASH_REMATCH[1]})
+VERSION_REGEX = ^Version=.\+$$
+VERSION_REPLACE_REGEX = Version=$(PKG_VERSION)
+
+%:
+	dh $@
+	
+override_dh_auto_build:
+	./build.sh
+	find ./bin -name "*.pdb" -type f -exec rm {} ';'
+
+override_dh_auto_install:
+	mkdir -p $(PREFIX)/share/OpenTabletDriver
+	cp -r bin/* $(PREFIX)/share/OpenTabletDriver
+	
+	cp -r Common/Linux/* $(PREFIX)
+	
+	mkdir -p $(PREFIX)/share/man/man8
+	gzip -c docs/manpages/opentabletdriver.8 > $(PREFIX)/share/man/man8/opentabletdriver.8.gz
+
+	mkdir -p $(PREFIX)/share/pixmaps
+	cp -v OpenTabletDriver.UX/Assets/* $(PREFIX)/share/pixmaps
+
+	mkdir -p $(PREFIX)/lib/udev/rules.d
+	./generate-rules.sh -v OpenTabletDriver.Configurations/Configurations $(PREFIX)/lib/udev/rules.d/99-opentabletdriver.rules
+
+	sed -i "s/$(VERSION_REGEX)/$(VERSION_REPLACE_REGEX)/g" "$(PREFIX)/share/applications/OpenTabletDriver.desktop"
