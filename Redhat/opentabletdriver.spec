@@ -9,6 +9,7 @@ Source0: opentabletdriver-%{version}.tar.gz
 Source1: opentabletdriver-linux-common.tar.gz
 
 AutoReqProv: no
+BuildRequires: dotnet-sdk-6.0
 Requires: dotnet-runtime-6.0
 Requires: pkgconfig(libevdev)
 Requires: gtk3
