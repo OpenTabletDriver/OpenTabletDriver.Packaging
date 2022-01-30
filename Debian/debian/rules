@@ -9,9 +9,6 @@ VERSION_REPLACE_REGEX = Version=$(PKG_VERSION)
 %:
 	dh $@
 	
-override_dh_auto_configure:
-	cp $(COMMON)/license/copyright debian/
-	
 override_dh_auto_build:
 	./build.sh
 	find ./bin -name "*.pdb" -type f -exec rm {} ';'

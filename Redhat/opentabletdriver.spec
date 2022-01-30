@@ -76,10 +76,6 @@ sed -i "s/Version: .\+$/Version: %{version}/g" %{buildroot}%{_datadir}/applicati
 mkdir -p %{buildroot}%{_datadir}/pixmaps
 cp -v OpenTabletDriver.UX/Assets/otd.ico OpenTabletDriver.UX/Assets/otd.png %{buildroot}%{_datadir}/pixmaps/
 
-# license doc
-mkdir -p %{buildroot}%{_defaultdocdir}/OpenTabletDriver
-install -m 0644 %{common}/license/copyright %{buildroot}%{_defaultdocdir}/OpenTabletDriver/copyright
-
 # man doc
 mkdir -p %{buildroot}%{_mandir}/man8
 gzip -c docs/manpages/opentabletdriver.8 > %{buildroot}%{_mandir}/man8/opentabletdriver.8.gz
@@ -97,10 +93,9 @@ fi
 
 %files
 %defattr(-,root,root)
+%license LICENSE
 %dir %{_datadir}/OpenTabletDriver
-%dir %{_defaultdocdir}/OpenTabletDriver
 %{_datadir}/OpenTabletDriver/*
-%{_defaultdocdir}/OpenTabletDriver/*
 %{_mandir}/man8/opentabletdriver.8*
 %{_datadir}/pixmaps/otd.ico
 %{_datadir}/pixmaps/otd.png
