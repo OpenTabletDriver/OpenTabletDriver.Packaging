@@ -95,7 +95,7 @@ fi
 %defattr(-,root,root)
 %license LICENSE
 %dir %{_datadir}/OpenTabletDriver
-%{_datadir}/OpenTabletDriver/*
+%{_datadir}/OpenTabletDriver/
 %{_mandir}/man8/opentabletdriver.8*
 %{_datadir}/pixmaps/otd.ico
 %{_datadir}/pixmaps/otd.png
