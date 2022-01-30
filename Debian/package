@@ -4,98 +4,45 @@ SCRIPT_DIR=$(realpath $(dirname ${BASH_SOURCE[0]}))
 
 source "${SCRIPT_DIR}/../base"
 
-# Build arguments
-FRAMEWORK="net6.0"
-RUNTIME="linux-x64"
-PROJECTS=("OpenTabletDriver.Daemon" "OpenTabletDriver.Console" "OpenTabletDriver.UX.Gtk")
-
-# Directories
-PKG_DIR="${SCRIPT_DIR}/OpenTabletDriver"
-OUT_DIR="${PKG_DIR}/usr/share/OpenTabletDriver"
-OUT_DIR_PIXMAPS="${PKG_DIR}/usr/share/pixmaps"
-
 # Package
 PKG_DEB_FILE="${SCRIPT_DIR}/OpenTabletDriver.deb"
-DEBIAN_DIR="${PKG_DIR}/DEBIAN"
-
-# Files
-PKG_DESKTOP_FILE="${PKG_DIR}/usr/share/applications/OpenTabletDriver.desktop"
-OUT_UDEV_FILE="${PKG_DIR}/usr/lib/udev/rules.d/99-opentabletdriver.rules"
 
 # Output
 
 clean() {
   clean_target "${PKG_DEB_FILE}" "Cleaning up existing builds..."
-  clean_target "${OUT_DIR}" "Cleaning up build directory..."
-  clean_target "${OUT_UDEV_FILE}" "Cleaning existing udev rules..."
-
-  print "Cleaning 'DEBIAN/control'..."
-  regex_edit "^Installed-Size:.\+$" "Installed-Size: 0" "${DEBIAN_DIR}/control"
-  regex_edit "^Version: .\+$" "Version: 0.0.0" "${DEBIAN_DIR}/control"
-
-  print "Cleaning desktop file..."
-  regex_edit "^Version=.\+$" "Version=0.0.0" "${PKG_DESKTOP_FILE}"
+  rm -rf ${SCRIPT_DIR}/opentabletdriver-* ${SCRIPT_DIR}/opentabletdriver_*
 }
 
-build() {
-  print "Building OpenTabletDriver..."
-  for project in ${PROJECTS[@]}; do
-    dotnet publish "${SRC_DIR}/${project}" \
-      --runtime ${RUNTIME} \
-      --configuration Release \
-      --self-contained false \
-      --framework ${FRAMEWORK} \
-      --output ${OUT_DIR} \
-      /p:VersionSuffix="${VERSION_SUFFIX}"
-  done
+prepare() {
+  pushd "${SCRIPT_DIR}"
+  cp -rv "${SRC_DIR}" opentabletdriver-${PKG_VERSION}
+  cp -rv debian opentabletdriver-${PKG_VERSION}/
+  cp -rv "${ROOT_DIR}/Common" opentabletdriver-${PKG_VERSION}/
+  cat <<EOF > opentabletdriver-${PKG_VERSION}/debian/changelog
+opentabletdriver (${PKG_VERSION}) UNRELEASED; urgency=low
+
+  * New version: ${PKG_VERSION}
+
+ -- InfinityGhost <infinityghostgit@gmail.com>  `LANG=C date +"%a, %d %b %Y %X %z"`
+ 
+EOF
+  popd
 }
 
 package() {
-  generate_rules "${SRC_DIR_CONFIGURATIONS}" "${OUT_UDEV_FILE}"
-
-  copy_assets "${OUT_DIR_PIXMAPS}"
-
-  clean_debug "${OUT_DIR}"
-
-  update_size
-  update_version
-
-  create_debpkg "${PKG_DIR}" "${PKG_DEB_FILE}"
-
+  create_debpkg "${PKG_DEB_FILE}"
   print "Packaging complete."
 }
 
-copy_assets() {
-  [ "$#" -ne 1 ] && exit 102
-
-  local ASSET_DIR="${SRC_DIR}/OpenTabletDriver.UX/Assets"
-  [ ! -d "${ASSET_DIR}" ] && exit 103
-
-  print "Copying assets to '${1}'..."
-  mkdir -p "${1}"
-  for file in "${SRC_DIR}/OpenTabletDriver.UX/Assets/*"; do
-    [ -f "${file}" ] && cp -v "${file}" "${1}/$(basename ${file})"
-  done
-}
-
-update_size() {
-  print "Updating size in DEBIAN/control"
-  regex_edit "Installed-Size:.\+$" "Installed-Size: $(du -s "${PKG_DIR}" | cut -f1)" "${DEBIAN_DIR}/control"
-}
-
-update_version() {
-  print "Updating version in DEBIAN/control"
-  regex_edit "Version: .\+$" "Version: ${PKG_VERSION}" "${DEBIAN_DIR}/control"
-
-  print "Updating version in desktop file"
-  regex_edit "Version=.\+$" "Version=${PKG_VERSION}" "${PKG_DESKTOP_FILE}"
-}
-
 create_debpkg () {
-  [ "$#" -ne 2 ] && exit 104
-
   print "Packaging 'OpenTabletDriver.deb'..."
-  dpkg-deb --build "${1}" "${2}"
+  pushd "${SCRIPT_DIR}"
+  pushd "opentabletdriver-${PKG_VERSION}"
+  dpkg-buildpackage -b
+  popd
+  mv "opentabletdriver_${PKG_VERSION}_amd64.deb" "${1}"
+  popd
 }
 
 case $1 in

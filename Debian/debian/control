@@ -1,0 +1,12 @@
+Source: opentabletdriver
+Priority: optional
+Build-Depends: dotnet-sdk-6.0
+Maintainer: InfinityGhost <infinityghostgit@gmail.com>, hwsnemo <hwsnemo@gmail.com>
+
+Package: opentabletdriver
+Section: base
+Architecture: amd64
+Depends: libevdev2, libgtk-3-0, dotnet-runtime-6.0
+Recommends: libx11-dev, libxrandr-dev
+Description: OpenTabletDriver
+ A cross-platform open source tablet driver.
