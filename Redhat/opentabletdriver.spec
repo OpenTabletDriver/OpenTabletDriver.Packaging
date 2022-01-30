@@ -59,7 +59,7 @@ install -D -m 644 ./99-opentabletdriver.rules %{buildroot}%{_prefix}/lib/udev/ru
 mkdir -p %{buildroot}%{_bindir}
 # the commands and binaries
 install -m 0755 %{common}/scripts/opentabletdriver %{buildroot}%{_bindir}/opentabletdriver
-install -m 0755 %{common}/scripts/opentabletdriver %{buildroot}%{_bindir}/otd
+install -m 0755 %{common}/scripts/otd %{buildroot}%{_bindir}/otd
 # modprobe rules
 mkdir -p %{buildroot}/usr/lib/modprobe.d
 install -m 0644 %{common}/modprobe/99-opentabletdriver.conf %{buildroot}%{_prefix}/lib/modprobe.d/99-opentabletdriver.conf
