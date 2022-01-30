@@ -100,8 +100,8 @@ fi
 %{_datadir}/pixmaps/otd.ico
 %{_datadir}/pixmaps/otd.png
 %{_datadir}/applications/OpenTabletDriver.desktop
-%{_prefix}/bin/opentabletdriver
-%{_prefix}/bin/otd
+%{_bindir}/opentabletdriver
+%{_bindir}/otd
 %{_prefix}/lib/systemd/user/opentabletdriver.service
 %{_prefix}/lib/udev/rules.d/99-opentabletdriver.rules
 %{_prefix}/lib/modprobe.d/99-opentabletdriver.conf
