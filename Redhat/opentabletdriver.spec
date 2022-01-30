@@ -2,106 +2,90 @@
 %undefine _disable_source_fetch
 # We don't have debug symbols, because .NET
 %define debug_package %{nil}
-
-Name: opentabletdriver
-Version: 0.6.0.2
-Release: 1
-Summary: A cross-platform open source tablet driver
-BuildArch: x86_64
 # We aren't using Mono but RPM expected Mono
 %global __requires_exclude_from ^/usr/share/OpenTabletDriver/.*$
 
-%if 0%{?suse_version}
-License: LGPL-3.0-only
-Group: Hardware/Other
-%else
+Name: opentabletdriver
+Version: %ver
+Release: 1
+Summary: A cross-platform open source tablet driver
 License: LGPLv3
-%endif
+BuildArch: x86_64
 
 URL: https://github.com/OpenTabletDriver/OpenTabletDriver
+
 # if devel_package is 1
 %if 0%{?devel_package:1}
-Source0: opentabletdriver.tar.gz
+Source0: opentabletdriver-%{version}.tar.gz
+%define otddir OpenTabletDriver
 %else
 Source0: https://github.com/OpenTabletDriver/OpenTabletDriver/archive/refs/tags/v%{version}.tar.gz
+%define otddir OpenTabletDriver-%{version}
 %endif
-# commands and binaries
-Source1: opentabletdriver
-Source2: otd
 
-#modprobe rules
-Source3: 99-opentabletdriver.conf
-# systemd
-Source4: opentabletdriver.service
-Source5: 50-opentabletdriver.preset
-Source6: OpenTabletDriver.desktop
+Source1: opentabletdriver-common-%{version}.tar.gz
 
-BuildRequires: dotnet-sdk-6.0
-BuildRequires: systemd-rpm-macros
-BuildRequires: libX11-devel
-BuildRequires: libXrandr-devel
-BuildRequires: gtk3-devel
+#BuildRequires: dotnet-sdk-6.0
+
 Requires: dotnet-runtime-6.0
 Requires: pkgconfig(libevdev)
-Requires: libX11
-Requires: libXrandr
 Requires: libevdev
 Requires: gtk3
-Requires: libX11-devel
-Requires: libXrandr-devel
-Requires: gtk3-devel
-Recommends: pkgconfig(xrandr)
 Recommends: pkgconfig(x11)
+Recommends: pkgconfig(xrandr)
+Recommends: libX11
+Recommends: libXrandr
 
 %description
 OpenTabletDriver is an open source, cross platform, user mode tablet driver. The goal of OpenTabletDriver is to be cross platform as possible with the highest compatibility in an easily configurable graphical user interface.
 
-%clean
-rm -f %{_builddir}/LICENSE
-
 %prep
-%if 0%{?devel_package:1}
-%autosetup -n OpenTabletDriver
-%else
-%autosetup -n OpenTabletDriver-%{version}
-%endif
+%autosetup -a 0 -a 1 -n %{otddir}
+
 %build
 ./build.sh
+find ./bin -name "*.pdb" -type f -exec rm {} ';'
+./generate-rules.sh ./99-opentabletdriver.rules
 
 %install
-
+%define common %{_builddir}/%{otddir}/Common/Linux
 mkdir -p %{buildroot}%{_datadir}
 mv bin/ %{buildroot}%{_datadir}/OpenTabletDriver/
 
 # copy udev rules
-./generate-rules.sh
-mkdir -p %{buildroot}/etc/udev/rules.d
-install -D -m 644 ./bin/99-opentabletdriver.rules %{buildroot}/usr/lib/udev/rules.d/99-opentabletdriver.rules
+mkdir -p %{buildroot}%{_prefix}/lib/udev/rules.d
+install -D -m 644 ./99-opentabletdriver.rules %{buildroot}%{_prefix}/lib/udev/rules.d/99-opentabletdriver.rules
 
 mkdir -p %{buildroot}%{_bindir}
 # the commands and binaries
-install -m 0755 %{SOURCE1} %{buildroot}%{_bindir}/opentabletdriver
-install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/otd
+install -m 0755 %{common}/scripts/opentabletdriver %{buildroot}%{_bindir}/opentabletdriver
+install -m 0755 %{common}/scripts/opentabletdriver %{buildroot}%{_bindir}/otd
 # modprobe rules
 mkdir -p %{buildroot}/usr/lib/modprobe.d
-install -m 0644 %{SOURCE3} %{buildroot}/usr/lib/modprobe.d/99-opentabletdriver.conf
+install -m 0644 %{common}/modprobe/99-opentabletdriver.conf %{buildroot}%{_prefix}/lib/modprobe.d/99-opentabletdriver.conf
 # systemd stuff
-mkdir -p %{buildroot}%{_userunitdir}
-install -m 0644 %{SOURCE4} %{buildroot}%{_userunitdir}/opentabletdriver.service
-mkdir -p %{buildroot}/usr/lib/systemd/user-preset/
-install -m 0644 %{SOURCE5} %{buildroot}/usr/lib/systemd/user-preset/50-opentabletdriver.preset
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/user
+install -m 0755 %{common}/systemd-user/opentabletdriver.service %{buildroot}%{_prefix}/lib/systemd/user/opentabletdriver.service
 
 # finally, the desktop file
 mkdir -p %{buildroot}%{_datadir}/applications
-install -m 0644 %{SOURCE6} %{buildroot}%{_datadir}/applications/OpenTabletDriver.desktop
+install -m 0755 %{common}/desktop/OpenTabletDriver.desktop %{buildroot}%{_datadir}/applications/OpenTabletDriver.desktop
+sed -i "s/Version: .\+$/Version: %{version}/g" %{buildroot}%{_datadir}/applications/OpenTabletDriver.desktop
 
 # then desktop icons
 mkdir -p %{buildroot}%{_datadir}/pixmaps
-cp -rv OpenTabletDriver.UX/Assets/* %{buildroot}%{_datadir}/pixmaps/
+cp -v OpenTabletDriver.UX/Assets/otd.ico OpenTabletDriver.UX/Assets/otd.png %{buildroot}%{_datadir}/pixmaps/
+
+# license doc
+mkdir -p %{buildroot}%{_defaultdocdir}/OpenTabletDriver
+install -m 0644 %{common}/license/copyright %{buildroot}%{_defaultdocdir}/OpenTabletDriver/copyright
+
+# man doc
+mkdir -p %{buildroot}%{_mandir}/man8
+gzip -c docs/manpages/opentabletdriver.8 > %{buildroot}%{_mandir}/man8/opentabletdriver.8.gz
 
 %post
 udevadm control --reload-rules
-%systemd_user_post opentabletdriver.service
 
 if lsmod | grep hid_uclogic > /dev/null ; then
      rmmod hid_uclogic || true
@@ -111,25 +95,18 @@ if lsmod | grep wacom > /dev/null ; then
      rmmod wacom || true
 fi
 
-%preun
-%systemd_user_preun opentabletdriver.service
-
-%postun
-%systemd_user_postun opentabletdriver.service
-
 %files
 %defattr(-,root,root)
-%license LICENSE
 %dir %{_datadir}/OpenTabletDriver
-%{_datadir}/OpenTabletDriver/
-/usr/lib/udev/rules.d/99-opentabletdriver.rules
-/usr/lib/modprobe.d/99-opentabletdriver.conf
+%dir %{_defaultdocdir}/OpenTabletDriver
+%{_datadir}/OpenTabletDriver/*
+%{_defaultdocdir}/OpenTabletDriver/*
+%{_mandir}/man8/opentabletdriver.8*
 %{_datadir}/pixmaps/otd.ico
 %{_datadir}/pixmaps/otd.png
 %{_datadir}/applications/OpenTabletDriver.desktop
-%{_bindir}/opentabletdriver
-%{_bindir}/otd
-/usr/lib/systemd/user/opentabletdriver.service
-/usr/lib/systemd/user-preset/50-opentabletdriver.preset
-
-%changelog
+%{_prefix}/bin/opentabletdriver
+%{_prefix}/bin/otd
+%{_prefix}/lib/systemd/user/opentabletdriver.service
+%{_prefix}/lib/udev/rules.d/99-opentabletdriver.rules
+%{_prefix}/lib/modprobe.d/99-opentabletdriver.conf

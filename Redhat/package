@@ -4,78 +4,46 @@ SCRIPT_DIR=$(realpath $(dirname ${BASH_SOURCE[0]}))
 
 source "${SCRIPT_DIR}/../base"
 
-# Build arguments
-FRAMEWORK="net6.0"
-RUNTIME="linux-x64"
-PROJECTS=("OpenTabletDriver.Daemon" "OpenTabletDriver.Console" "OpenTabletDriver.UX.Gtk")
-
-# Directories
-PKG_DIR="${SCRIPT_DIR}/OpenTabletDriver"
-OUT_DIR="${PKG_DIR}/usr/share/OpenTabletDriver"
-OUT_DIR_CONFIGURATIONS="${OUT_DIR}/Configurations"
-OUT_DIR_PIXMAPS="${PKG_DIR}/usr/share/pixmaps"
-
 # Package
 PKG_RPM_FILE="${SCRIPT_DIR}/OpenTabletDriver.rpm"
 SPEC_FILE="${SCRIPT_DIR}/opentabletdriver.spec"
-
-# Files
-PKG_DESKTOP_FILE="${PKG_DIR}/usr/share/applications/OpenTabletDriver.desktop"
-OUT_UDEV_FILE="${PKG_DIR}/usr/lib/udev/rules.d/99-opentabletdriver.rules"
+RPM_TOPDIRS=(BUILD BUILDROOT RPMS SOURCES SPECS SRPMS)
 
 # Output
 
 clean() {
   clean_target "${PKG_RPM_FILE}" "Cleaning up existing builds..."
-  clean_target "${OUT_DIR}" "Cleaning up build directory..."
-  clean_target "${OUT_UDEV_FILE}" "Cleaning existing udev rules..."
-  clean_target "${SCRIPT_DIR}/BUILD" "Cleaning up BUILD folder..."
-  clean_target "${SCRIPT_DIR}/BUILDROOT" "Cleaning up BUILDROOT folder..."
-  clean_target "${SCRIPT_DIR}/RPMS" "Cleaning up RPMS folder..."
-  clean_target "${SCRIPT_DIR}/SOURCES" "Cleaning up SOURCES folder..."
-  clean_target "${SCRIPT_DIR}/SPECS" "Cleaning up SPECS folder..."
-  clean_target "${SCRIPT_DIR}/SRPMS" "Cleaning up SRPMS folder..."
-  rm -f opentabletdriver.tar.gz
-  print "Cleaning 'opentabletdriver.spec'..."
-  regex_edit "^Version: .\+$" "Version: 0.0.0" "${SPEC_FILE}"
 
-  print "Cleaning desktop file..."
-  regex_edit "^Version=.\+$" "Version=0.0.0" "${PKG_DESKTOP_FILE}"
+  for dir in ${RPM_TOPDIRS[@]}; do
+    clean_target "${SCRIPT_DIR}/${dir}" "Cleaning up ${dir} folder..."
+  done
 }
 
-build(){
-  tar -zcvf opentabletdriver.tar.gz -C "${SCRIPT_DIR}/../src" .
+prepare() {
+  mkdir -p ${SCRIPT_DIR}/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+  make_source_tarball "${SCRIPT_DIR}/SOURCES/opentabletdriver-${PKG_VERSION}.tar.gz"
+  make_linux_common_tarball "${SCRIPT_DIR}/SOURCES/opentabletdriver-common-${PKG_VERSION}.tar.gz"
 }
 
 package() {
-  mkdir -p ${SCRIPT_DIR}/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
-
-  create_rpmpkg "${PKG_DIR}" "${PKG_RPM_FILE}"
-
+  create_rpmpkg "${PKG_RPM_FILE}"
   print "Packaging complete."
 }
 
-update_version() {
-  print "Updating version in opentabletdriver.spec"
-  regex_edit "Version: .\+$" "Version: ${PKG_VERSION}" "${SPEC_FILE}"
-
-  print "Updating version in desktop file"
-  regex_edit "Version=.\+$" "Version=${PKG_VERSION}" "${PKG_DESKTOP_FILE}"
-}
-
 create_rpmpkg() {
-  [ "$#" -ne 2 ] && exit 104
   print "Packaging 'OpenTabletDriver.rpm'..."
-  rpmbuild -D "_topdir ${SCRIPT_DIR}" -D "pkg_dir ${1}" -D "_sourcedir ${SCRIPT_DIR}" -bb ${SPEC_FILE} -D "devel_package 1"
-  mv ${SCRIPT_DIR}/RPMS/x86_64/opentabletdriver*.rpm ${2}
+  rpmbuild -D "ver ${PKG_VERSION}" -D "_topdir ${SCRIPT_DIR}" -D "devel_package 1" -bb ${SPEC_FILE}
+  mv ${SCRIPT_DIR}/RPMS/x86_64/opentabletdriver*.rpm ${1}
 }
 
 case $1 in
     "clean") clean ;;
+    "prepare") prepare ;;
     "build") build ;;
     "package") package ;;
     *)
         clean
+        prepare
         build
         package
     ;;

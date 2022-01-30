@@ -86,3 +86,17 @@ clean_debug() {
   print "Removing all debug files... (.pdb)"
   find "${1}" -name "*.pdb" -type f -exec rm {} ';'
 }
+
+make_source_tarball() {
+  print "Making ${1} from OpenTabletDriver source..."
+  pushd "${SRC_DIR}/.."
+  tar -zcvf "${1}" "OpenTabletDriver"
+  popd
+}
+
+make_linux_common_tarball() {
+  print "Making a tarball with Linux common files..."
+  pushd "${ROOT_DIR}"
+  tar -zcvf "${1}" "Common"
+  popd
+}

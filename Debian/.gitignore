@@ -2,8 +2,3 @@ OpenTabletDriver/usr/share/OpenTabletDriver/
 OpenTabletDriver/usr/share/pixmaps/
 OpenTabletDriver/usr/lib/udev/rules.d/
 *.deb
-BUILD/
-SOURCES/
-SRPMS/
-RPMS/
-BUILDROOT/

@@ -1,0 +1,43 @@
+#!/usr/bin/make -f
+SHELL=/usr/bin/env bash
+PREFIX = debian/tmp/usr
+COMMON = Common/Linux/
+PKG_VERSION = $(shell [[ $$(cat Directory.Build.props) =~ \<VersionBase\>(.+?)\<\/VersionBase\> ]] && echo $${BASH_REMATCH[1]})
+VERSION_REGEX = ^Version=.\+$$
+VERSION_REPLACE_REGEX = Version=$(PKG_VERSION)
+
+%:
+	dh $@
+	
+override_dh_auto_configure:
+	cp $(COMMON)/license/copyright debian/
+	
+override_dh_auto_build:
+	./build.sh
+	find ./bin -name "*.pdb" -type f -exec rm {} ';'
+	./generate-rules.sh -v OpenTabletDriver.Configurations/Configurations ./99-opentabletdriver.rules
+
+override_dh_auto_install:
+	mkdir -p $(PREFIX)/share/OpenTabletDriver
+	cp -r bin/* $(PREFIX)/share/OpenTabletDriver
+	
+	mkdir -p $(PREFIX)/bin
+	install -m 0755 $(COMMON)/scripts/otd $(PREFIX)/bin/otd
+	install -m 0755 $(COMMON)/scripts/opentabletdriver $(PREFIX)/bin/opentabletdriver
+	
+	mkdir -p $(PREFIX)/lib/modprobe.d
+	mkdir -p $(PREFIX)/lib/systemd/user
+	install -m 0644 $(COMMON)/modprobe/99-opentabletdriver.conf $(PREFIX)/lib/modprobe.d/99-opentabletdriver.conf
+	install -m 0755 $(COMMON)/systemd-user/opentabletdriver.service $(PREFIX)/lib/systemd/user/
+	
+	mkdir -p $(PREFIX)/share/man/man8
+	gzip -c docs/manpages/opentabletdriver.8 > $(PREFIX)/share/man/man8/opentabletdriver.8.gz
+
+	mkdir -p $(PREFIX)/share/pixmaps
+	cp -v OpenTabletDriver.UX/Assets/otd.{ico,png} $(PREFIX)/share/pixmaps
+
+	mkdir -p $(PREFIX)/lib/udev/rules.d
+	install -m 0644 ./99-opentabletdriver.rules $(PREFIX)/lib/udev/rules.d/99-opentabletdriver.rules
+	
+	mkdir -p $(PREFIX)/share/applications
+	sed "s/$(VERSION_REGEX)/$(VERSION_REPLACE_REGEX)/g" "Common/Linux/desktop/OpenTabletDriver.desktop" > $(PREFIX)/share/applications/OpenTabletDriver.desktop
