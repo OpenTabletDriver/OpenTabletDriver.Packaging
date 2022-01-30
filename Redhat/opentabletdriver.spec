@@ -25,7 +25,7 @@ Source0: https://github.com/OpenTabletDriver/OpenTabletDriver/archive/refs/tags/
 
 Source1: opentabletdriver-common-%{version}.tar.gz
 
-#BuildRequires: dotnet-sdk-6.0
+BuildRequires: dotnet-sdk-6.0
 
 Requires: dotnet-runtime-6.0
 Requires: pkgconfig(libevdev)
@@ -45,7 +45,7 @@ OpenTabletDriver is an open source, cross platform, user mode tablet driver. The
 %build
 ./build.sh
 find ./bin -name "*.pdb" -type f -exec rm {} ';'
-./generate-rules.sh ./99-opentabletdriver.rules
+./generate-rules.sh -v OpenTabletDriver.Configurations/Configurations ./99-opentabletdriver.rules
 
 %install
 %define common %{_builddir}/%{otddir}/Common/Linux
