@@ -6,7 +6,7 @@ source "${SCRIPT_DIR}/../base"
 
 # Package
 PKG_RPM_FILE="${SCRIPT_DIR}/OpenTabletDriver.rpm"
-SPEC_FILE="${SCRIPT_DIR}/opentabletdriver.spec"
+SPEC_FILE="${SCRIPT_DIR}/opentabletdriver.spec.in"
 RPM_TOPDIRS=(BUILD BUILDROOT RPMS SOURCES SPECS SRPMS)
 
 # Output
@@ -17,12 +17,16 @@ clean() {
   for dir in ${RPM_TOPDIRS[@]}; do
     clean_target "${SCRIPT_DIR}/${dir}" "Cleaning up ${dir} folder..."
   done
+  clean_target "${SCRIPT_DIR}/opentabletdriver.spec" "Cleaning up old opentabletdriver.spec file..."
 }
 
 prepare() {
   mkdir -p ${SCRIPT_DIR}/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
   make_source_tarball "${SCRIPT_DIR}/SOURCES/opentabletdriver-${PKG_VERSION}.tar.gz"
   make_linux_common_tarball "${SCRIPT_DIR}/SOURCES/opentabletdriver-common-${PKG_VERSION}.tar.gz"
+  # replace @VERSION@ with PKG_VERSION
+  sed -e "s/@VERSION@/${PKG_VERSION}/g" "${SPEC_FILE}" > "${SCRIPT_DIR}/opentabletdriver.spec"
+  SPEC_FILE="${SCRIPT_DIR}/opentabletdriver.spec"
 }
 
 package() {
@@ -32,7 +36,7 @@ package() {
 
 create_rpmpkg() {
   print "Packaging 'OpenTabletDriver.rpm'..."
-  rpmbuild -D "ver ${PKG_VERSION}" -D "_topdir ${SCRIPT_DIR}" -D "devel_package 1" -bb ${SPEC_FILE}
+  rpmbuild -D "_topdir ${SCRIPT_DIR}" -D "devel_package 1" -bb ${SPEC_FILE}
   mv ${SCRIPT_DIR}/RPMS/x86_64/opentabletdriver*.rpm ${1}
 }
 

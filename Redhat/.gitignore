@@ -3,3 +3,4 @@ OpenTabletDriver/usr/share/pixmaps/
 OpenTabletDriver/usr/lib/udev/rules.d/
 *.rpm
 *.tar.gz
+*.spec
