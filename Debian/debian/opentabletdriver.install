@@ -1,0 +1,10 @@
+usr/share/OpenTabletDriver
+usr/share/man/man8/opentabletdriver.8*
+usr/share/pixmaps/otd.ico
+usr/share/pixmaps/otd.png
+usr/share/applications/OpenTabletDriver.desktop
+usr/bin/opentabletdriver
+usr/bin/otd
+usr/lib/systemd/user/opentabletdriver.service
+usr/lib/udev/rules.d/99-opentabletdriver.rules
+usr/lib/modprobe.d/99-opentabletdriver.conf
