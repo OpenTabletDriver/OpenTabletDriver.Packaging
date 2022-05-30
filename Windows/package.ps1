@@ -10,7 +10,7 @@ $root = $PSScriptRoot
 $src = "$root/../src"
 
 # Repositories
-$otdRepo = @('https://github.com/InfinityGhost/OpenTabletDriver', "$src/OpenTabletDriver")
+$otdRepo = @('https://github.com/OpenTabletDriver/OpenTabletDriver', "$src/OpenTabletDriver")
 $repoRoot = $otdRepo[1]
 
 function clone_repo($repo) {
