@@ -2,7 +2,7 @@
 Description=OpenTabletDriver Daemon
 
 [Service]
-ExecStart=/usr/share/OpenTabletDriver/OpenTabletDriver.Daemon -c /usr/share/OpenTabletDriver/Configurations
+ExecStart=/usr/share/OpenTabletDriver/OpenTabletDriver.Daemon
 Restart=always
 RestartSec=30
 
