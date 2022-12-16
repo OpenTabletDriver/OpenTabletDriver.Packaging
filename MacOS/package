@@ -4,58 +4,75 @@ SCRIPT_DIR=$(realpath $(dirname ${BASH_SOURCE[0]}))
 
 source "${SCRIPT_DIR}/../base"
 
-# Build arguments
-FRAMEWORK="net6.0"
-RUNTIME="osx-x64"
-PROJECTS=("OpenTabletDriver.Daemon" "OpenTabletDriver.UX.MacOS")
+RUNTIMES=("osx-x64" "osx-arm64")
 
-# Directories
-PKG_DIR="${SCRIPT_DIR}/OpenTabletDriver.app"
-OUT_DIR="${PKG_DIR}/Contents/MacOS"
+package_with() {
+  # Build arguments
+  FRAMEWORK="net6.0"
+  RUNTIME=$1
+  PROJECTS=("OpenTabletDriver.Daemon" "OpenTabletDriver.UX.MacOS")
 
-# Package
-PKG_ICONS_FILE="${PKG_DIR}/Contents/Resources/Icon.icns"
-PKG_TARBALL_FILE="${SCRIPT_DIR}/OpenTabletDriver.${RUNTIME}.tar.gz"
+  # Directories
+  SRC_PKG_DIR="${SCRIPT_DIR}/OpenTabletDriver.app"
+  RUNTIME_DIR="${SCRIPT_DIR}/${RUNTIME}"
+  PKG_DIR="${RUNTIME_DIR}/OpenTabletDriver.app"
+  OUT_DIR="${PKG_DIR}/Contents/MacOS"
 
-clean() {
-  clean_target "${PKG_TARBALL_FILE}" "Cleaning up existing builds..."
-  clean_target "${OUT_DIR}" "Cleaning up build directory..."
+  # Package
+  PKG_TARBALL_FILE="${SCRIPT_DIR}/OpenTabletDriver.${RUNTIME}.tar.gz"
+
+  clean() {
+    clean_target "${PKG_TARBALL_FILE}" "Cleaning up existing builds..."
+    clean_target "${RUNTIME_DIR}" "Cleaning up build directory..."
+  }
+
+  build() {
+    print "Building ${RUNTIME} OpenTabletDriver..."
+    mkdir -p "${PKG_DIR}"
+    cp -r "${SRC_PKG_DIR}" "${RUNTIME_DIR}"
+    for project in ${PROJECTS[@]}; do
+      dotnet publish "${SRC_DIR}/${project}"\
+        --runtime ${RUNTIME} \
+        --configuration Release \
+        --self-contained true \
+        --framework ${FRAMEWORK} \
+        --output ${OUT_DIR} \
+        /p:PublishTrimmed=false \
+        /p:VersionSuffix="${VERSION_SUFFIX}" \
+        /p:MacIsBuildingBundle=true #prevent eto from generating app bundle since we are bundling ourselves
+    done
+  }
+
+  package() {
+    clean_debug "${OUT_DIR}"
+
+    if type -p codesign
+    then
+      print "Signing ${RUNTIME} MacOS App..."
+      codesign  -s - -f --deep "${PKG_DIR}"
+    else
+      print "Skipping signing ${RUNTIME} MacOS App..."
+    fi
+
+    create_tarball "${PKG_DIR}" "${PKG_TARBALL_FILE}"
+
+    print "Packaging ${RUNTIME} complete."
+  }
+
+  case $2 in
+    "clean") clean ;;
+    "prepare") prepare ;;
+    "build") build ;;
+    "package") package ;;
+    *)
+      clean
+      prepare
+      build
+      package
+    ;;
+  esac
 }
 
-build() {
-  print "Building OpenTabletDriver..."
-  for project in ${PROJECTS[@]}; do
-    dotnet publish "${SRC_DIR}/${project}"\
-      --runtime ${RUNTIME} \
-      --configuration Release \
-      --self-contained true \
-      --framework ${FRAMEWORK} \
-      --output ${OUT_DIR} \
-      /p:PublishTrimmed=false \
-      /p:VersionSuffix="${VERSION_SUFFIX}"
-  done
-}
-
-package() {
-  clean_debug "${OUT_DIR}"
-
-  print "Copying MacOS assets..."
-  cp -v "${SRC_DIR}/OpenTabletDriver.UX.MacOS/Icon.icons" "${PKG_ICONS_FILE}"
-
-  create_tarball "${PKG_DIR}" "${PKG_TARBALL_FILE}"
-
-  print "Packaging complete."
-}
-
-case $1 in
-  "clean") clean ;;
-  "prepare") prepare ;;
-  "build") build ;;
-  "package") package ;;
-  *)
-    clean
-    prepare
-    build
-    package
-  ;;
-esac
+for runtime in ${RUNTIMES[@]}; do
+  package_with $runtime $1
+done
