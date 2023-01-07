@@ -1,6 +1,6 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: OpenTabletDriver
-Source: https://github.com/InfinityGhost/OpenTabletDriver
+Source: https://github.com/OpenTabletDriver/OpenTabletDriver
 
 Files: *
 Copyright: Copyright 2019-2020 InfinityGhost <infinityghostgit@gmail.com>
